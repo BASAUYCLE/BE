@@ -25,6 +25,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for easier API testing
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll() // Allow public access to auth endpoints
+                        .requestMatchers("/api/upload/**").permitAll() // Allow public access to upload endpoints
                         .anyRequest().authenticated() // Protect all other endpoints
                 )
                 .httpBasic(Customizer.withDefaults()); // Enable Basic Auth for testing
