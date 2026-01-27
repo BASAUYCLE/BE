@@ -17,7 +17,7 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/register")
-    User register(@RequestBody UserRegisterRequest request) {
+    User register(@org.springframework.web.bind.annotation.ModelAttribute UserRegisterRequest request) {
         return userService.createUser(request);
     }
 

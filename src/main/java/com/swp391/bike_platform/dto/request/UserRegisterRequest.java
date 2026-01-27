@@ -1,6 +1,7 @@
 package com.swp391.bike_platform.dto.request;
 
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 public class UserRegisterRequest {
@@ -8,6 +9,6 @@ public class UserRegisterRequest {
     private String password;
     private String fullName;
     private String phoneNumber;
-    private String cccdFront; // Base64 string
-    private String cccdBack; // Base64 string
+    private MultipartFile cccdFront;
+    private MultipartFile cccdBack;
 }

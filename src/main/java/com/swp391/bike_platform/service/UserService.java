@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ImgBBService imgBBService;
 
     public User createUser(UserRegisterRequest request) {
         User user = new User();
@@ -23,8 +24,19 @@ public class UserService {
         user.setFullName(request.getFullName());
         user.setPhoneNumber(request.getPhoneNumber());
         user.setRole(UserEnum.MEMBER); // Default role for registration
-        user.setCccdFront(request.getCccdFront());
-        user.setCccdBack(request.getCccdBack());
+
+        // Upload CCCD images to ImgBB
+        try {
+            if (request.getCccdFront() != null && !request.getCccdFront().isEmpty()) {
+                user.setCccdFront(imgBBService.uploadImage(request.getCccdFront()));
+            }
+            if (request.getCccdBack() != null && !request.getCccdBack().isEmpty()) {
+                user.setCccdBack(imgBBService.uploadImage(request.getCccdBack()));
+            }
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Failed to upload CCCD images: " + e.getMessage());
+        }
+
         user.setIsVerified("PENDING");
 
         return userRepository.save(user);
