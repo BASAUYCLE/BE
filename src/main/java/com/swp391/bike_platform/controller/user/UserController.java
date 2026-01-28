@@ -1,11 +1,9 @@
 package com.swp391.bike_platform.controller.user;
 
-import com.swp391.bike_platform.entity.User;
 import com.swp391.bike_platform.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import com.swp391.bike_platform.response.UserResponse;
 
 @RestController
 @RequestMapping("/users")
@@ -14,18 +12,23 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    java.util.List<User> getAllUsers() {
+    java.util.List<UserResponse> getAllUsers() {
         return userService.getAllUsers();
     }
 
     @GetMapping("/{userId}")
-    User getUser(@PathVariable Long userId) {
+    UserResponse getUser(@PathVariable Long userId) {
         return userService.getUserById(userId);
     }
 
+    @GetMapping("/email/{email}")
+    UserResponse getUserByEmail(@PathVariable String email) {
+        return userService.getUserByEmail(email);
+    }
+
     @PutMapping("/{userId}")
-    User updateUser(@PathVariable Long userId,
-            @RequestBody com.swp391.bike_platform.dto.request.UserUpdateRequest request) {
+    UserResponse updateUser(@PathVariable Long userId,
+            @RequestBody com.swp391.bike_platform.request.UserUpdateRequest request) {
         return userService.updateUser(userId, request);
     }
 
