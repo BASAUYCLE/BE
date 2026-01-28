@@ -47,12 +47,16 @@ public class UserService {
         return toUserResponse(userRepository.save(user));
     }
 
-    public boolean authenticate(UserLoginRequest request) {
+    public User authenticate(UserLoginRequest request) {
         var user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         // Use BCrypt to verify password
-        return passwordEncoder.matches(request.getPassword(), user.getPassword());
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        return user;
     }
 
     public java.util.List<com.swp391.bike_platform.response.UserResponse> getAllUsers() {
