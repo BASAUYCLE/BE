@@ -15,6 +15,7 @@ public enum ErrorCode {
     UNAUTHORIZED(1007, "You do not have permission", HttpStatus.FORBIDDEN),
     INVALID_TOKEN(1008, "Token is invalid", HttpStatus.UNAUTHORIZED),
     TOKEN_EXPIRED(1009, "Token has expired", HttpStatus.UNAUTHORIZED),
+    INVALID_EMAIL(1011, "Invalid email address", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatus statusCode) {
