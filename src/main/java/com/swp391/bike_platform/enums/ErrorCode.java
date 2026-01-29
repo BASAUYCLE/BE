@@ -16,6 +16,8 @@ public enum ErrorCode {
     INVALID_TOKEN(1008, "Token is invalid", HttpStatus.UNAUTHORIZED),
     TOKEN_EXPIRED(1009, "Token has expired", HttpStatus.UNAUTHORIZED),
     INVALID_EMAIL(1011, "Invalid email address", HttpStatus.BAD_REQUEST),
+    IMAGE_UPLOAD_FAILED(1012, "Failed to upload image", HttpStatus.INTERNAL_SERVER_ERROR),
+    TOKEN_CREATION_FAILED(1013, "Failed to create authentication token", HttpStatus.INTERNAL_SERVER_ERROR),
     ;
 
     ErrorCode(int code, String message, HttpStatus statusCode) {

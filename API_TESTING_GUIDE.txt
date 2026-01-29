@@ -1,0 +1,138 @@
+=============================================================
+           HƯỚNG DẪN TEST API AUTHORIZATION
+=============================================================
+
+📋 YÊU CẦU:
+- Server đang chạy: http://localhost:8080
+- Tool test: Postman, Bruno, hoặc cURL
+- Có sẵn tài khoản MEMBER và ADMIN trong database
+
+=============================================================
+BƯỚC 1: LẤY TOKEN ĐĂNG NHẬP
+=============================================================
+
+LOGIN VỚI TÀI KHOẢN:
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+Body:
+{
+    "email": "your_email@example.com",
+    "password": "your_password"
+}
+
+→ Lưu lại token trong response để dùng cho các request tiếp theo
+
+
+=============================================================
+BƯỚC 2: TEST CÁC ENDPOINT
+=============================================================
+
+LƯU Ý: Thêm Header cho mọi request cần xác thực:
+Authorization: Bearer <token_của_bạn>
+
+
+-------------------------------------------------------------
+TEST 1: GET /users/myinfo (TẤT CẢ ROLES)
+-------------------------------------------------------------
+GET http://localhost:8080/users/myinfo
+Headers:
+  Authorization: Bearer <TOKEN>
+
+Expected: ✅ 200 OK (MEMBER/ADMIN đều được)
+
+
+-------------------------------------------------------------
+TEST 2: PUT /users/myinfo (TỰ SỬA PROFILE)
+-------------------------------------------------------------
+PUT http://localhost:8080/users/myinfo
+Headers:
+  Authorization: Bearer <TOKEN>
+  Content-Type: application/json
+Body:
+{
+    "fullName": "Tên mới",
+    "phoneNumber": "0987654321"
+}
+
+Expected: ✅ 200 OK (MEMBER/ADMIN đều được)
+
+
+-------------------------------------------------------------
+TEST 3: GET /users (CHỈ ADMIN)
+-------------------------------------------------------------
+GET http://localhost:8080/users
+Headers:
+  Authorization: Bearer <TOKEN>
+
+Expected:
+  - MEMBER token: ❌ 403 Forbidden
+  - ADMIN token:  ✅ 200 OK
+
+
+-------------------------------------------------------------
+TEST 4: GET /users/{userId} (CHỈ ADMIN)
+-------------------------------------------------------------
+GET http://localhost:8080/users/1
+Headers:
+  Authorization: Bearer <TOKEN>
+
+Expected:
+  - MEMBER token: ❌ 403 Forbidden
+  - ADMIN token:  ✅ 200 OK
+
+
+-------------------------------------------------------------
+TEST 5: PUT /users/{userId} (ADMIN SỬA USER KHÁC)
+-------------------------------------------------------------
+PUT http://localhost:8080/users/1
+Headers:
+  Authorization: Bearer <TOKEN>
+  Content-Type: application/json
+Body:
+{
+    "fullName": "Tên bất kỳ"
+}
+
+Expected:
+  - MEMBER token: ❌ 403 Forbidden
+  - ADMIN token:  ✅ 200 OK
+
+
+-------------------------------------------------------------
+TEST 6: DELETE /users/{userId} (CHỈ ADMIN)
+-------------------------------------------------------------
+DELETE http://localhost:8080/users/5
+Headers:
+  Authorization: Bearer <TOKEN>
+
+Expected:
+  - MEMBER token: ❌ 403 Forbidden
+  - ADMIN token:  ✅ 200 OK
+
+
+-------------------------------------------------------------
+TEST 7: KHÔNG CÓ TOKEN
+-------------------------------------------------------------
+GET http://localhost:8080/users/myinfo
+(Không có Authorization header)
+
+Expected: ❌ 401 Unauthorized
+
+
+=============================================================
+BẢNG TÓM TẮT
+=============================================================
+
+| Endpoint              | Method | No Token | MEMBER | ADMIN |
+|-----------------------|--------|----------|--------|-------|
+| /auth/login           | POST   | ✅ 200   | ✅ 200 | ✅ 200|
+| /auth/register        | POST   | ✅ 200   | ✅ 200 | ✅ 200|
+| /users/myinfo         | GET    | ❌ 401   | ✅ 200 | ✅ 200|
+| /users/myinfo         | PUT    | ❌ 401   | ✅ 200 | ✅ 200|
+| /users                | GET    | ❌ 401   | ❌ 403 | ✅ 200|
+| /users/{id}           | GET    | ❌ 401   | ❌ 403 | ✅ 200|
+| /users/{id}           | PUT    | ❌ 401   | ❌ 403 | ✅ 200|
+| /users/{id}           | DELETE | ❌ 401   | ❌ 403 | ✅ 200|
+| /api/upload/image     | POST   | ❌ 401   | ✅ 200 | ✅ 200|
+
+=============================================================

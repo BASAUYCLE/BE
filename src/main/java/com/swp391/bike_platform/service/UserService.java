@@ -2,6 +2,8 @@ package com.swp391.bike_platform.service;
 
 import com.swp391.bike_platform.request.UserLoginRequest;
 import com.swp391.bike_platform.request.UserRegisterRequest;
+import com.swp391.bike_platform.request.UserUpdateRequest;
+import com.swp391.bike_platform.response.UserResponse;
 import com.swp391.bike_platform.entity.User;
 import com.swp391.bike_platform.enums.UserEnum;
 import com.swp391.bike_platform.repository.UserRepository;
@@ -11,6 +13,9 @@ import com.swp391.bike_platform.enums.ErrorCode;
 import com.swp391.bike_platform.exception.AppException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -18,7 +23,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final ImgBBService imgBBService;
 
-    public com.swp391.bike_platform.response.UserResponse createUser(UserRegisterRequest request) {
+    public UserResponse createUser(UserRegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail()))
             throw new AppException(ErrorCode.USER_EXISTED);
 
@@ -39,7 +44,7 @@ public class UserService {
                 user.setCccdBack(imgBBService.uploadImage(request.getCccdBack()));
             }
         } catch (java.io.IOException e) {
-            throw new RuntimeException("Failed to upload CCCD images: " + e.getMessage());
+            throw new AppException(ErrorCode.IMAGE_UPLOAD_FAILED);
         }
 
         user.setIsVerified("PENDING");
@@ -59,24 +64,23 @@ public class UserService {
         return user;
     }
 
-    public java.util.List<com.swp391.bike_platform.response.UserResponse> getAllUsers() {
+    public List<UserResponse> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(this::toUserResponse)
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
     }
 
-    public com.swp391.bike_platform.response.UserResponse getUserById(Long id) {
+    public UserResponse getUserById(Long id) {
         return toUserResponse(userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED)));
     }
 
-    public com.swp391.bike_platform.response.UserResponse getUserByEmail(String email) {
+    public UserResponse getUserByEmail(String email) {
         return toUserResponse(userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED)));
     }
 
-    public com.swp391.bike_platform.response.UserResponse updateUser(Long id,
-            com.swp391.bike_platform.request.UserUpdateRequest request) {
+    public UserResponse updateUser(Long id, UserUpdateRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
@@ -95,8 +99,8 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-    private com.swp391.bike_platform.response.UserResponse toUserResponse(User user) {
-        return com.swp391.bike_platform.response.UserResponse.builder()
+    private UserResponse toUserResponse(User user) {
+        return UserResponse.builder()
                 .userId(user.getUserId())
                 .email(user.getEmail())
                 .fullName(user.getFullName())

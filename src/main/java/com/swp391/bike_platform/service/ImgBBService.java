@@ -1,5 +1,7 @@
 package com.swp391.bike_platform.service;
 
+import com.swp391.bike_platform.enums.ErrorCode;
+import com.swp391.bike_platform.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -111,11 +113,11 @@ public class ImgBBService {
             }
 
             log.error("ImgBB upload failed: Invalid response from API");
-            throw new RuntimeException("Failed to upload image to ImgBB");
+            throw new AppException(ErrorCode.IMAGE_UPLOAD_FAILED);
 
         } catch (Exception e) {
             log.error("ImgBB upload error: {}", e.getMessage(), e);
-            throw new RuntimeException("Image upload failed: " + e.getMessage());
+            throw new AppException(ErrorCode.IMAGE_UPLOAD_FAILED);
         }
     }
 }

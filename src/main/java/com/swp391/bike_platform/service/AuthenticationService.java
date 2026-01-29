@@ -60,7 +60,7 @@ public class AuthenticationService {
             jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
             return jwsObject.serialize();
         } catch (JOSEException e) {
-            throw new RuntimeException("Cannot create token", e);
+            throw new AppException(ErrorCode.TOKEN_CREATION_FAILED);
         }
     }
 
