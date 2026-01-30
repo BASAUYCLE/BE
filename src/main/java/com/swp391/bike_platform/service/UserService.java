@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final ImgBBService imgBBService;
+    private final CloudinaryService cloudinaryService;
 
     public UserResponse createUser(UserRegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail()))
@@ -35,13 +35,13 @@ public class UserService {
         user.setPhoneNumber(request.getPhoneNumber().trim());
         user.setRole(UserEnum.MEMBER); // Default role for registration
 
-        // Upload CCCD images to ImgBB
+        // Upload CCCD images to Cloudinary
         try {
             if (request.getCccdFront() != null && !request.getCccdFront().isEmpty()) {
-                user.setCccdFront(imgBBService.uploadImage(request.getCccdFront()));
+                user.setCccdFront(cloudinaryService.uploadImage(request.getCccdFront()));
             }
             if (request.getCccdBack() != null && !request.getCccdBack().isEmpty()) {
-                user.setCccdBack(imgBBService.uploadImage(request.getCccdBack()));
+                user.setCccdBack(cloudinaryService.uploadImage(request.getCccdBack()));
             }
         } catch (java.io.IOException e) {
             throw new AppException(ErrorCode.IMAGE_UPLOAD_FAILED);

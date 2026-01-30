@@ -45,6 +45,10 @@ public class SecurityConfig {
                                                 // Public endpoints
                                                 .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
 
+                                                // Authenticated users (all roles) - PHẢI ĐẶT TRƯỚC /users/{userId}
+                                                .requestMatchers("/users/myinfo", "/users/myinfo/**").authenticated()
+                                                .requestMatchers("/api/upload/**").authenticated()
+
                                                 // Admin only endpoints
                                                 .requestMatchers(HttpMethod.GET, "/users")
                                                 .hasRole(UserEnum.ADMIN.name())
@@ -54,10 +58,6 @@ public class SecurityConfig {
                                                 .hasRole(UserEnum.ADMIN.name())
                                                 .requestMatchers(HttpMethod.DELETE, "/users/{userId}")
                                                 .hasRole(UserEnum.ADMIN.name())
-
-                                                // Authenticated users (all roles)
-                                                .requestMatchers("/users/myinfo", "/users/myinfo/**").authenticated()
-                                                .requestMatchers("/api/upload/**").authenticated()
 
                                                 // All other requests need authentication
                                                 .anyRequest().authenticated())

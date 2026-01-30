@@ -1,6 +1,6 @@
 package com.swp391.bike_platform.controller;
 
-import com.swp391.bike_platform.service.ImgBBService;
+import com.swp391.bike_platform.service.CloudinaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,10 +15,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FileUploadController {
 
-    private final ImgBBService imgBBService;
+    private final CloudinaryService cloudinaryService;
 
     /**
-     * Upload image to ImgBB
+     * Upload image to Cloudinary
      * POST /api/upload/image
      * 
      * @param file Image file (multipart/form-data)
@@ -44,8 +44,8 @@ public class FileUploadController {
                 return ResponseEntity.badRequest().body(error);
             }
 
-            // Upload to ImgBB
-            String imageUrl = imgBBService.uploadImage(file);
+            // Upload to Cloudinary
+            String imageUrl = cloudinaryService.uploadImage(file);
 
             // Return success response
             Map<String, String> response = new HashMap<>();
