@@ -78,6 +78,15 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.DELETE, "/users/{userId}")
                                                 .hasRole(UserEnum.ADMIN.name())
 
+                                                // Brands - Public GET, Admin for CUD
+                                                .requestMatchers(HttpMethod.GET, "/brands", "/brands/**").permitAll()
+                                                .requestMatchers(HttpMethod.POST, "/brands")
+                                                .hasRole(UserEnum.ADMIN.name())
+                                                .requestMatchers(HttpMethod.PUT, "/brands/**")
+                                                .hasRole(UserEnum.ADMIN.name())
+                                                .requestMatchers(HttpMethod.DELETE, "/brands/**")
+                                                .hasRole(UserEnum.ADMIN.name())
+
                                                 // All other requests need authentication
                                                 .anyRequest().authenticated())
                                 .oauth2ResourceServer(oauth2 -> oauth2
