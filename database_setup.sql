@@ -46,3 +46,4 @@ BEGIN
     PRINT 'Table Users already exists.';
 END
 GO
+
