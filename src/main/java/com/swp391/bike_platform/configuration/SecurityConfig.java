@@ -64,6 +64,16 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.DELETE, "/brands/**")
                                                 .hasRole(UserEnum.ADMIN.name())
 
+                                                // Categories - Public GET, Admin for CUD
+                                                .requestMatchers(HttpMethod.GET, "/categories", "/categories/**")
+                                                .permitAll()
+                                                .requestMatchers(HttpMethod.POST, "/categories")
+                                                .hasRole(UserEnum.ADMIN.name())
+                                                .requestMatchers(HttpMethod.PUT, "/categories/**")
+                                                .hasRole(UserEnum.ADMIN.name())
+                                                .requestMatchers(HttpMethod.DELETE, "/categories/**")
+                                                .hasRole(UserEnum.ADMIN.name())
+
                                                 // All other requests need authentication
                                                 .anyRequest().authenticated())
                                 .oauth2ResourceServer(oauth2 -> oauth2

@@ -20,6 +20,8 @@ public enum ErrorCode {
     TOKEN_CREATION_FAILED(1013, "Failed to create authentication token", HttpStatus.INTERNAL_SERVER_ERROR),
     BRAND_EXISTED(1014, "Brand already existed", HttpStatus.BAD_REQUEST),
     BRAND_NOT_EXISTED(1015, "Brand not existed", HttpStatus.NOT_FOUND),
+    CATEGORY_EXISTED(1016, "Category already existed", HttpStatus.BAD_REQUEST),
+    CATEGORY_NOT_EXISTED(1017, "Category not existed", HttpStatus.NOT_FOUND),
     ;
 
     ErrorCode(int code, String message, HttpStatus statusCode) {
