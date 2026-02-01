@@ -2,7 +2,7 @@ package com.swp391.bike_platform.controller.admin;
 
 import com.swp391.bike_platform.request.BrandCreateRequest;
 import com.swp391.bike_platform.request.BrandUpdateRequest;
-import com.swp391.bike_platform.response.BrandResponse;
+import com.swp391.bike_platform.response.admin.BrandResponse;
 import com.swp391.bike_platform.service.BrandService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

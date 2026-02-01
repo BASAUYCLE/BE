@@ -1,4 +1,4 @@
-package com.swp391.bike_platform.response;
+package com.swp391.bike_platform.response.member;
 
 import com.swp391.bike_platform.enums.UserEnum;
 import lombok.AllArgsConstructor;
@@ -24,5 +24,3 @@ public class UserResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
-
-/// tranh lo mat khau da ma hoa len response

@@ -3,7 +3,7 @@ package com.swp391.bike_platform.service;
 import com.swp391.bike_platform.request.UserLoginRequest;
 import com.swp391.bike_platform.request.UserRegisterRequest;
 import com.swp391.bike_platform.request.UserUpdateRequest;
-import com.swp391.bike_platform.response.UserResponse;
+import com.swp391.bike_platform.response.member.UserResponse;
 import com.swp391.bike_platform.entity.User;
 import com.swp391.bike_platform.enums.UserEnum;
 import com.swp391.bike_platform.repository.UserRepository;

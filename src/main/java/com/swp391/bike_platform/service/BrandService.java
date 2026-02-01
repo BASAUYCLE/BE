@@ -6,7 +6,7 @@ import com.swp391.bike_platform.exception.AppException;
 import com.swp391.bike_platform.repository.BrandRepository;
 import com.swp391.bike_platform.request.BrandCreateRequest;
 import com.swp391.bike_platform.request.BrandUpdateRequest;
-import com.swp391.bike_platform.response.BrandResponse;
+import com.swp391.bike_platform.response.admin.BrandResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,7 +23,7 @@ public class BrandService {
 
     public BrandResponse createBrand(BrandCreateRequest request) {
         log.info("Creating brand: {}", request.getBrandName());
-        
+
         if (brandRepository.existsByBrandName(request.getBrandName())) {
             throw new AppException(ErrorCode.BRAND_EXISTED);
         }
@@ -50,7 +50,7 @@ public class BrandService {
 
         Brand savedBrand = brandRepository.save(brand);
         log.info("Brand saved with logo URL: {}", savedBrand.getBrandLogoUrl());
-        
+
         return toBrandResponse(savedBrand);
     }
 

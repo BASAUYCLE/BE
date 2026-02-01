@@ -1,4 +1,4 @@
-package com.swp391.bike_platform.response;
+package com.swp391.bike_platform.response.admin;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

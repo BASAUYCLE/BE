@@ -2,7 +2,7 @@ package com.swp391.bike_platform.controller.admin;
 
 import com.swp391.bike_platform.request.CategoryCreateRequest;
 import com.swp391.bike_platform.request.CategoryUpdateRequest;
-import com.swp391.bike_platform.response.CategoryResponse;
+import com.swp391.bike_platform.response.admin.CategoryResponse;
 import com.swp391.bike_platform.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

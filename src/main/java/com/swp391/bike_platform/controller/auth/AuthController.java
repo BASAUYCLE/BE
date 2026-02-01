@@ -7,7 +7,7 @@ import com.swp391.bike_platform.request.UserRegisterRequest;
 import com.swp391.bike_platform.response.ApiResponse;
 import com.swp391.bike_platform.response.AuthenticationResponse;
 import com.swp391.bike_platform.response.IntrospectResponse;
-import com.swp391.bike_platform.response.UserResponse;
+import com.swp391.bike_platform.response.member.UserResponse;
 import com.swp391.bike_platform.service.AuthenticationService;
 import com.swp391.bike_platform.service.UserService;
 import jakarta.validation.Valid;

@@ -1,7 +1,7 @@
 package com.swp391.bike_platform.controller.user;
 
 import com.swp391.bike_platform.request.UserUpdateRequest;
-import com.swp391.bike_platform.response.UserResponse;
+import com.swp391.bike_platform.response.member.UserResponse;
 import com.swp391.bike_platform.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

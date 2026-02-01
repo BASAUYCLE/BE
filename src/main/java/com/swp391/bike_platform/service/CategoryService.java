@@ -6,7 +6,7 @@ import com.swp391.bike_platform.exception.AppException;
 import com.swp391.bike_platform.repository.CategoryRepository;
 import com.swp391.bike_platform.request.CategoryCreateRequest;
 import com.swp391.bike_platform.request.CategoryUpdateRequest;
-import com.swp391.bike_platform.response.CategoryResponse;
+import com.swp391.bike_platform.response.admin.CategoryResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

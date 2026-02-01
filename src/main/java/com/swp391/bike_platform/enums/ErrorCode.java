@@ -22,6 +22,7 @@ public enum ErrorCode {
     BRAND_NOT_EXISTED(1015, "Brand not existed", HttpStatus.NOT_FOUND),
     CATEGORY_EXISTED(1016, "Category already existed", HttpStatus.BAD_REQUEST),
     CATEGORY_NOT_EXISTED(1017, "Category not existed", HttpStatus.NOT_FOUND),
+    POST_NOT_EXISTED(1018, "Bicycle post not existed", HttpStatus.NOT_FOUND),
     ;
 
     ErrorCode(int code, String message, HttpStatus statusCode) {
