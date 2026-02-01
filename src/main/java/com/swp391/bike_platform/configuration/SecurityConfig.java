@@ -12,11 +12,6 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfigurationSource;
 
-/**
- * Security Configuration
- * Cấu hình chính cho Spring Security, chỉ chứa SecurityFilterChain
- * Các beans khác được inject từ: CorsConfig, JwtConfig, PasswordEncoderConfig
- */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {

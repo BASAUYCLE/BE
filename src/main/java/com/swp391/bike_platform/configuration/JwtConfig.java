@@ -13,10 +13,6 @@ import javax.crypto.spec.SecretKeySpec;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * JWT Configuration
- * Cấu hình JWT decoder và converter cho authentication
- */
 @Configuration
 public class JwtConfig {
 
@@ -24,7 +20,7 @@ public class JwtConfig {
     private String signerKey;
 
     @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+    JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
             String role = jwt.getClaim("role");
@@ -36,7 +32,7 @@ public class JwtConfig {
     }
 
     @Bean
-    public JwtDecoder jwtDecoder() {
+    JwtDecoder jwtDecoder() {
         SecretKeySpec secretKeySpec = new SecretKeySpec(
                 signerKey.getBytes(),
                 "HS512");
