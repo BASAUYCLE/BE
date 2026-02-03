@@ -99,6 +99,54 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
+    /**
+     * Get all users with PENDING verification status
+     */
+    public List<UserResponse> getPendingUsers() {
+        return userRepository.findByIsVerified("PENDING").stream()
+                .map(this::toUserResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Verify user by Admin (APPROVE or REJECT)
+     */
+    public UserResponse verifyUser(Long userId, String action, String reason) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // Validate action
+        if (!action.equalsIgnoreCase("APPROVE") && !action.equalsIgnoreCase("REJECT")) {
+            throw new AppException(ErrorCode.INVALID_VERIFY_ACTION);
+        }
+
+        // Check if already verified/rejected
+        if ("VERIFIED".equals(user.getIsVerified())) {
+            throw new AppException(ErrorCode.USER_ALREADY_VERIFIED);
+        }
+        if ("REJECTED".equals(user.getIsVerified())) {
+            throw new AppException(ErrorCode.USER_ALREADY_REJECTED);
+        }
+
+        // Update status
+        if (action.equalsIgnoreCase("APPROVE")) {
+            user.setIsVerified("VERIFIED");
+        } else {
+            user.setIsVerified("REJECTED");
+        }
+
+        User savedUser = userRepository.save(user);
+        return toUserResponse(savedUser);
+    }
+
+    /**
+     * Get User entity by ID (for internal use)
+     */
+    public User getUserEntityById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+    }
+
     private UserResponse toUserResponse(User user) {
         return UserResponse.builder()
                 .userId(user.getUserId())
