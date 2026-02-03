@@ -150,21 +150,57 @@ Dựa trên source code hiện có và yêu cầu của bạn, tôi đề xuất
 
 ## 📊 API Endpoints Cho Frontend
 
-```
-# Master Data APIs (cho dropdowns)
-GET  /api/brands              → Danh sách hãng xe
-GET  /api/categories          → Danh sách loại xe
-
-# Post Management APIs
-POST /api/posts               → Tạo bài đăng mới
-PUT  /api/posts/{id}          → Cập nhật bài đăng
-GET  /api/posts/{id}          → Chi tiết bài đăng
-GET  /api/posts               → Danh sách (có filter, pagination)
-GET  /api/posts/my-posts      → Bài đăng của tôi
-
-# Image Upload API
-POST /api/upload/bicycle-image → Upload ảnh xe (trả về URL)
-```
+| Status | Method | Endpoint | Mô tả |
+|:------:|--------|----------|-------|
+| | **Authentication** | | |
+| ✅ | POST | `/auth/register` | Đăng ký tài khoản (kèm CCCD) |
+| ✅ | POST | `/auth/login` | Đăng nhập (trả về JWT) |
+| | **Brands** | | |
+| ✅ | GET | `/brands` | Danh sách hãng xe |
+| ✅ | GET | `/brands/{brandId}` | Chi tiết hãng xe |
+| ✅ | POST | `/brands` | Tạo hãng (ADMIN) |
+| ✅ | PUT | `/brands/{brandId}` | Cập nhật hãng (ADMIN) |
+| ✅ | DELETE | `/brands/{brandId}` | Xóa hãng (ADMIN) |
+| | **Categories** | | |
+| ✅ | GET | `/categories` | Danh sách loại xe |
+| ✅ | GET | `/categories/{categoryId}` | Chi tiết loại xe |
+| ✅ | POST | `/categories` | Tạo loại (ADMIN) |
+| ✅ | PUT | `/categories/{categoryId}` | Cập nhật loại (ADMIN) |
+| ✅ | DELETE | `/categories/{categoryId}` | Xóa loại (ADMIN) |
+| | **Posts** | | |
+| ✅ | POST | `/posts` | Tạo bài đăng (MEMBER) |
+| ✅ | GET | `/posts` | Danh sách bài đăng (PUBLIC) |
+| ✅ | GET | `/posts/{postId}` | Chi tiết bài đăng (PUBLIC) |
+| ✅ | GET | `/posts/seller/{sellerId}` | Bài đăng theo seller |
+| ✅ | GET | `/posts/brand/{brandId}` | Bài đăng theo brand |
+| ✅ | GET | `/posts/category/{categoryId}` | Bài đăng theo category |
+| ✅ | GET | `/posts/size/{size}` | Bài đăng theo size |
+| ✅ | GET | `/posts/status/{status}` | Bài đăng theo status |
+| ✅ | GET | `/posts/search?minPrice=&maxPrice=` | Tìm kiếm theo giá |
+| ✅ | PUT | `/posts/{postId}` | Cập nhật bài đăng (MEMBER) |
+| ✅ | DELETE | `/posts/{postId}` | Xóa bài đăng (MEMBER) |
+| ❌ | GET | `/posts/my-posts` | Bài đăng của tôi (chưa implement) |
+| | **Admin User Verification** | | |
+| ✅ | GET | `/admin/users` | Danh sách tất cả users (ADMIN) |
+| ✅ | GET | `/admin/users/pending` | Users đang chờ duyệt CCCD (ADMIN) |
+| ✅ | GET | `/admin/users/{userId}` | Chi tiết user (ADMIN) |
+| ✅ | POST | `/admin/users/verify` | Approve/Reject user + gửi email (ADMIN) |
+| | **User Profile** | | |
+| ✅ | GET | `/users/myinfo` | Thông tin user đang login |
+| ✅ | PUT | `/users/myinfo` | Cập nhật thông tin cá nhân |
+| ✅ | GET | `/users/{userId}` | Chi tiết user (ADMIN) |
+| ✅ | PUT | `/users/{userId}` | Cập nhật user (ADMIN) |
+| ✅ | DELETE | `/users/{userId}` | Xóa user (ADMIN) |
+| | **Image Upload** | | |
+| ✅ | POST | `/api/upload/image` | Upload ảnh (Cloudinary) |
+| | **Inspection (chưa implement)** | | |
+| ❌ | GET | `/inspection/pending` | Bài đăng chờ kiểm định (INSPECTOR) |
+| ❌ | PUT | `/inspection/{id}/approve` | Duyệt bài đăng (INSPECTOR) |
+| ❌ | PUT | `/inspection/{id}/reject` | Từ chối bài đăng (INSPECTOR) |
+| | **Wishlist (Phase 2)** | | |
+| ❌ | POST | `/wishlist/{postId}` | Thêm vào yêu thích |
+| ❌ | DELETE | `/wishlist/{postId}` | Xóa khỏi yêu thích |
+| ❌ | GET | `/wishlist` | Danh sách yêu thích của tôi |
 
 ---
 
@@ -468,25 +504,38 @@ public enum ImageTypeEnum {
 
 ### Controllers (Thư mục: `controller/`)
 
-#### [NEW] [BicyclePostController.java](file:///c:/Users/xuhoa/Downloads/bike-platform/src/main/java/com/swp391/bike_platform/controller/user/BicyclePostController.java)
-- `POST /api/posts` - Tạo bài đăng (MEMBER)
-- `PUT /api/posts/{id}` - Cập nhật bài đăng (MEMBER - chủ bài)
-- `GET /api/posts/{id}` - Xem chi tiết bài đăng (PUBLIC)
-- `GET /api/posts` - Danh sách bài đăng (PUBLIC)
-- `GET /api/posts/my-posts` - Bài đăng của tôi (MEMBER)
-- `PUT /api/posts/{id}/status` - Đổi trạng thái (MEMBER - chủ bài)
-- `DELETE /api/posts/{id}` - Xóa bài đăng (MEMBER - chủ bài)
+#### [EXISTING] [BicyclePostController.java](file:///c:/Users/xuhoa/Downloads/bike-platform/src/main/java/com/swp391/bike_platform/controller/BicyclePostController.java)
+- `POST /posts` - Tạo bài đăng (MEMBER)
+- `GET /posts` - Danh sách bài đăng (PUBLIC)
+- `GET /posts/{postId}` - Chi tiết bài đăng (PUBLIC)
+- `GET /posts/seller/{sellerId}` - Bài đăng theo seller
+- `GET /posts/brand/{brandId}` - Bài đăng theo brand
+- `GET /posts/category/{categoryId}` - Bài đăng theo category
+- `GET /posts/size/{size}` - Bài đăng theo size
+- `GET /posts/status/{status}` - Bài đăng theo status
+- `GET /posts/search?minPrice=&maxPrice=` - Tìm kiếm theo giá
+- `PUT /posts/{postId}` - Cập nhật bài đăng (MEMBER)
+- `DELETE /posts/{postId}` - Xóa bài đăng (MEMBER)
 
-#### [NEW] [InspectionController.java](file:///c:/Users/xuhoa/Downloads/bike-platform/src/main/java/com/swp391/bike_platform/controller/inspector/InspectionController.java)
-- `GET /api/inspection/pending` - Danh sách bài chờ duyệt (INSPECTOR)
-- `PUT /api/inspection/{id}/approve` - Duyệt bài (INSPECTOR)
-- `PUT /api/inspection/{id}/reject` - Từ chối bài (INSPECTOR)
+#### [NEW] AdminUserController.java (đã implement)
+- `GET /admin/users` - Danh sách users (ADMIN)
+- `GET /admin/users/pending` - Users đang chờ duyệt (ADMIN)
+- `GET /admin/users/{userId}` - Chi tiết user (ADMIN)
+- `POST /admin/users/verify` - Approve/Reject user + gửi email (ADMIN)
 
-#### [NEW] [BrandController.java](file:///c:/Users/xuhoa/Downloads/bike-platform/src/main/java/com/swp391/bike_platform/controller/BrandController.java)
-- `GET /api/brands` - Danh sách hãng xe (PUBLIC - cho dropdown)
+#### [EXISTING] [BrandController.java](file:///c:/Users/xuhoa/Downloads/bike-platform/src/main/java/com/swp391/bike_platform/controller/admin/BrandController.java)
+- `GET /brands` - Danh sách hãng xe (PUBLIC)
+- `GET /brands/{brandId}` - Chi tiết hãng (PUBLIC)
+- `POST /brands` - Tạo hãng (ADMIN)
+- `PUT /brands/{brandId}` - Cập nhật hãng (ADMIN)
+- `DELETE /brands/{brandId}` - Xóa hãng (ADMIN)
 
-#### [NEW] [CategoryController.java](file:///c:/Users/xuhoa/Downloads/bike-platform/src/main/java/com/swp391/bike_platform/controller/CategoryController.java)
-- `GET /api/categories` - Danh sách loại xe (PUBLIC - cho dropdown)
+#### [EXISTING] [CategoryController.java](file:///c:/Users/xuhoa/Downloads/bike-platform/src/main/java/com/swp391/bike_platform/controller/admin/CategoryController.java)
+- `GET /categories` - Danh sách loại xe (PUBLIC)
+- `GET /categories/{categoryId}` - Chi tiết loại (PUBLIC)
+- `POST /categories` - Tạo loại (ADMIN)
+- `PUT /categories/{categoryId}` - Cập nhật loại (ADMIN)
+- `DELETE /categories/{categoryId}` - Xóa loại (ADMIN)
 
 ---
 
@@ -503,9 +552,9 @@ Thêm các bảng mới: `Brands`, `Categories`, `BicyclePosts`, `BicycleImages`
 - [ ] Repository: `WishlistRepository`
 - [ ] Service: `WishlistService`
 - [ ] Controller: `WishlistController`
-  - `POST /api/wishlist/{postId}` - Thêm vào yêu thích
-  - `DELETE /api/wishlist/{postId}` - Xóa khỏi yêu thích
-  - `GET /api/wishlist` - Danh sách yêu thích của tôi
+  - `POST /wishlist/{postId}` - Thêm vào yêu thích
+  - `DELETE /wishlist/{postId}` - Xóa khỏi yêu thích
+  - `GET /wishlist` - Danh sách yêu thích của tôi
 
 ---
 
