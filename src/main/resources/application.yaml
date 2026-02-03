@@ -19,6 +19,19 @@ spring:
         format_sql: true
         physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
+  # Mail Configuration
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: contact.basaucycle2026@gmail.com
+    password: pjti mrad spub fhcg    # Google App Password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 # Cloudinary Configuration
 cloudinary:
   cloud-name: dod2rhslh      # Thay bằng cloud name của bạn
