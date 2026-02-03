@@ -114,15 +114,19 @@ BEGIN
         bicycle_description NVARCHAR(MAX),
         
         -- Technical Specs
-        groupset VARCHAR(100),           -- Shimano 105, Ultegra, SRAM Force...
-        frame_material VARCHAR(50),      -- Carbon, Aluminum, Steel, Titanium
-        brake_type VARCHAR(30),          -- Rim, Disc
-        size VARCHAR(20),                -- S, M, L, XL, 48, 50, 52, 54, 56...
+        groupset NVARCHAR(100),           -- Shimano 105, Ultegra, SRAM Force...
+        frame_material NVARCHAR(50),      -- Carbon, Aluminum, Steel, Titanium, Other
+        brake_type NVARCHAR(30),          -- Rim, Disc, Other
+        size VARCHAR(200) CHECK (size IN ('XS (42 - 47) / 147 - 155 cm',
+         'S (48 - 52) / 155 - 165 cm', 'M (53 - 55) / 165 - 175 cm',
+          'L (56 - 58) / 175 - 183 cm', 'XL (59 - 60) / 183 - 191 cm',
+           'XXL (61 - 63) / 191 - 198 cm')),  -- Valid sizes only
         model_year INT,
         
         -- Status
-        post_status VARCHAR(20) NOT NULL DEFAULT 'AVAILABLE' 
-            CHECK (post_status IN ('AVAILABLE', 'DEPOSITED', 'SOLD')),
+        post_status VARCHAR(200) NOT NULL DEFAULT 'PENDING' 
+            CHECK (post_status IN ('AVAILABLE', 'DEPOSITED',
+             'SOLD', 'PENDING', 'REJECTED')),
         
         -- Timestamps
         created_at DATETIME2 DEFAULT GETDATE(),
