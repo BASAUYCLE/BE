@@ -23,6 +23,16 @@ public enum ErrorCode {
     CATEGORY_EXISTED(1016, "Category already existed", HttpStatus.BAD_REQUEST),
     CATEGORY_NOT_EXISTED(1017, "Category not existed", HttpStatus.NOT_FOUND),
     POST_NOT_EXISTED(1018, "Bicycle post not existed", HttpStatus.NOT_FOUND),
+    IMAGE_NOT_EXISTED(1019, "Bicycle image not existed", HttpStatus.NOT_FOUND),
+    POST_UPDATE_NOT_ALLOWED(1020, "Cannot update post in current status", HttpStatus.BAD_REQUEST),
+    INVALID_SIZE(1021, "Invalid bicycle size", HttpStatus.BAD_REQUEST),
+    MISSING_REQUIRED_FIELD(1022, "Missing required field", HttpStatus.BAD_REQUEST),
+    USER_HAS_NO_POSTS(1023, "User has no posts", HttpStatus.NOT_FOUND),
+    NO_POSTS_FOR_BRAND(1024, "No posts found for this brand", HttpStatus.NOT_FOUND),
+    NO_POSTS_FOR_CATEGORY(1025, "No posts found for this category", HttpStatus.NOT_FOUND),
+    NO_POSTS_FOR_SIZE(1026, "No posts found for this size", HttpStatus.NOT_FOUND),
+    NO_POSTS_FOR_STATUS(1027, "No posts found for this status", HttpStatus.NOT_FOUND),
+    NO_POSTS_FOR_PRICE_RANGE(1028, "No posts found in this price range", HttpStatus.NOT_FOUND),
     ;
 
     ErrorCode(int code, String message, HttpStatus statusCode) {
