@@ -33,6 +33,10 @@ public enum ErrorCode {
     NO_POSTS_FOR_SIZE(1026, "No posts found for this size", HttpStatus.NOT_FOUND),
     NO_POSTS_FOR_STATUS(1027, "No posts found for this status", HttpStatus.NOT_FOUND),
     NO_POSTS_FOR_PRICE_RANGE(1028, "No posts found in this price range", HttpStatus.NOT_FOUND),
+    EMAIL_SEND_FAILED(1029, "Failed to send email", HttpStatus.INTERNAL_SERVER_ERROR),
+    INVALID_VERIFY_ACTION(1030, "Invalid action. Use APPROVE or REJECT", HttpStatus.BAD_REQUEST),
+    USER_ALREADY_VERIFIED(1031, "User is already verified", HttpStatus.BAD_REQUEST),
+    USER_ALREADY_REJECTED(1032, "User is already rejected", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatus statusCode) {
