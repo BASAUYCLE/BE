@@ -46,6 +46,8 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/upload/**").authenticated()
 
                                                 // Admin only endpoints
+                                                .requestMatchers("/admin/**")
+                                                .hasRole(UserEnum.ADMIN.name())
                                                 .requestMatchers(HttpMethod.GET, "/users")
                                                 .hasRole(UserEnum.ADMIN.name())
                                                 .requestMatchers(HttpMethod.GET, "/users/{userId}")
