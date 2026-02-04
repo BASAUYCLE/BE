@@ -35,24 +35,17 @@ public class BicyclePostService {
     private final BrandRepository brandRepository;
     private final CategoryRepository categoryRepository;
 
-    private static final List<String> VALID_SIZES = Arrays.asList(
-            "XS (42 - 47) / 147 - 155 cm",
-            "S (48 - 52) / 155 - 165 cm",
-            "M (53 - 55) / 165 - 175 cm",
-            "L (56 - 58) / 175 - 183 cm",
-            "XL (59 - 60) / 183 - 191 cm",
-            "XXL (61 - 63) / 191 - 198 cm");
+    // Statuses visible to public users (Mercari style)
+    private static final List<String> PUBLIC_STATUSES = Arrays.asList(
+            PostStatus.AVAILABLE.name(),
+            PostStatus.DEPOSITED.name(),
+            PostStatus.SOLD.name());
 
     public BicyclePostResponse createPost(BicyclePostCreateRequest request) {
         log.info("Creating bicycle post: {}", request.getBicycleName());
 
         // Validate required fields
         validateRequiredFields(request);
-
-        // Validate size
-        if (!VALID_SIZES.contains(request.getSize())) {
-            throw new AppException(ErrorCode.INVALID_SIZE);
-        }
 
         // Get related entities
         User seller = userRepository.findById(request.getSellerId())
@@ -88,7 +81,7 @@ public class BicyclePostService {
     }
 
     public List<BicyclePostResponse> getAllPosts() {
-        return bicyclePostRepository.findAll().stream()
+        return bicyclePostRepository.findByPostStatusIn(PUBLIC_STATUSES).stream()
                 .map(this::toPostResponse)
                 .collect(Collectors.toList());
     }
@@ -103,9 +96,9 @@ public class BicyclePostService {
             throw new AppException(ErrorCode.USER_NOT_EXISTED);
         }
 
-        List<BicyclePost> posts = bicyclePostRepository.findBySeller_UserId(sellerId);
+        // Only return public statuses (AVAILABLE, DEPOSITED, SOLD)
+        List<BicyclePost> posts = bicyclePostRepository.findBySeller_UserIdAndPostStatusIn(sellerId, PUBLIC_STATUSES);
 
-        // Check if user has any posts
         if (posts.isEmpty()) {
             throw new AppException(ErrorCode.USER_HAS_NO_POSTS);
         }
@@ -121,7 +114,7 @@ public class BicyclePostService {
             throw new AppException(ErrorCode.BRAND_NOT_EXISTED);
         }
 
-        List<BicyclePost> posts = bicyclePostRepository.findByBrand_BrandId(brandId);
+        List<BicyclePost> posts = bicyclePostRepository.findByBrand_BrandIdAndPostStatusIn(brandId, PUBLIC_STATUSES);
         if (posts.isEmpty()) {
             throw new AppException(ErrorCode.NO_POSTS_FOR_BRAND);
         }
@@ -137,7 +130,8 @@ public class BicyclePostService {
             throw new AppException(ErrorCode.CATEGORY_NOT_EXISTED);
         }
 
-        List<BicyclePost> posts = bicyclePostRepository.findByCategory_CategoryId(categoryId);
+        List<BicyclePost> posts = bicyclePostRepository.findByCategory_CategoryIdAndPostStatusIn(categoryId,
+                PUBLIC_STATUSES);
         if (posts.isEmpty()) {
             throw new AppException(ErrorCode.NO_POSTS_FOR_CATEGORY);
         }
@@ -148,11 +142,7 @@ public class BicyclePostService {
     }
 
     public List<BicyclePostResponse> getPostsBySize(String size) {
-        if (!VALID_SIZES.contains(size)) {
-            throw new AppException(ErrorCode.INVALID_SIZE);
-        }
-
-        List<BicyclePost> posts = bicyclePostRepository.findBySize(size);
+        List<BicyclePost> posts = bicyclePostRepository.findBySizeAndPostStatusIn(size, PUBLIC_STATUSES);
         if (posts.isEmpty()) {
             throw new AppException(ErrorCode.NO_POSTS_FOR_SIZE);
         }
@@ -162,19 +152,11 @@ public class BicyclePostService {
                 .collect(Collectors.toList());
     }
 
-    public List<BicyclePostResponse> getPostsByStatus(String status) {
-        List<BicyclePost> posts = bicyclePostRepository.findByPostStatus(status.toUpperCase());
-        if (posts.isEmpty()) {
-            throw new AppException(ErrorCode.NO_POSTS_FOR_STATUS);
-        }
-
-        return posts.stream()
-                .map(this::toPostResponse)
-                .collect(Collectors.toList());
-    }
+    // REMOVED: getPostsByStatus - Security risk! Use Admin endpoint instead.
 
     public List<BicyclePostResponse> getPostsByPriceRange(BigDecimal minPrice, BigDecimal maxPrice) {
-        List<BicyclePost> posts = bicyclePostRepository.findByPriceBetween(minPrice, maxPrice);
+        List<BicyclePost> posts = bicyclePostRepository.findByPriceBetweenAndPostStatusIn(minPrice, maxPrice,
+                PUBLIC_STATUSES);
         if (posts.isEmpty()) {
             throw new AppException(ErrorCode.NO_POSTS_FOR_PRICE_RANGE);
         }
@@ -184,15 +166,21 @@ public class BicyclePostService {
                 .collect(Collectors.toList());
     }
 
-    public BicyclePostResponse updatePost(Long postId, BicyclePostUpdateRequest request) {
+    public BicyclePostResponse updatePost(Long postId, Long userId, BicyclePostUpdateRequest request) {
         BicyclePost post = findPostById(postId);
+
+        // Check ownership
+        if (!post.getSeller().getUserId().equals(userId)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
         String currentStatus = post.getPostStatus();
 
         log.info("Updating post {} with status: {}", postId, currentStatus);
 
         // Check if update is allowed based on status
-        if (PostStatus.PENDING.name().equals(currentStatus)) {
-            // Allow full update
+        if (PostStatus.PENDING.name().equals(currentStatus) || "DRAFTED".equals(currentStatus)) {
+            // Allow full update for PENDING and DRAFTED
             updateAllFields(post, request);
         } else if (PostStatus.AVAILABLE.name().equals(currentStatus)) {
             // Only allow color, size, description update
@@ -227,11 +215,6 @@ public class BicyclePostService {
 
         // Validate required fields
         validateRequiredFields(request);
-
-        // Validate size
-        if (!VALID_SIZES.contains(request.getSize())) {
-            throw new AppException(ErrorCode.INVALID_SIZE);
-        }
 
         // Get related entities
         User seller = userRepository.findById(userId)
@@ -278,12 +261,16 @@ public class BicyclePostService {
                 .collect(Collectors.toList());
     }
 
-    public void deletePost(Long postId) {
-        if (!bicyclePostRepository.existsById(postId)) {
-            throw new AppException(ErrorCode.POST_NOT_EXISTED);
+    public void deletePost(Long postId, Long userId) {
+        BicyclePost post = findPostById(postId);
+
+        // Check ownership
+        if (!post.getSeller().getUserId().equals(userId)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
         }
+
         bicyclePostRepository.deleteById(postId);
-        log.info("Post {} deleted", postId);
+        log.info("Post {} deleted by user {}", postId, userId);
     }
 
     // Helper methods
@@ -342,9 +329,6 @@ public class BicyclePostService {
             post.setBicycleColor(request.getBicycleColor().trim());
         }
         if (request.getSize() != null) {
-            if (!VALID_SIZES.contains(request.getSize())) {
-                throw new AppException(ErrorCode.INVALID_SIZE);
-            }
             post.setSize(request.getSize());
         }
         if (request.getBicycleDescription() != null) {
