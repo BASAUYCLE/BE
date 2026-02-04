@@ -1,16 +1,17 @@
-package com.swp391.bike_platform.controller;
+package com.swp391.bike_platform.controller.post;
 
 import com.swp391.bike_platform.request.BicyclePostCreateRequest;
 import com.swp391.bike_platform.request.BicyclePostUpdateRequest;
 import com.swp391.bike_platform.response.BicyclePostResponse;
 import com.swp391.bike_platform.service.BicyclePostService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 @RestController
 @RequestMapping("/posts")
