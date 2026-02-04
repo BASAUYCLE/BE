@@ -5,6 +5,8 @@ import com.swp391.bike_platform.request.BicyclePostUpdateRequest;
 import com.swp391.bike_platform.response.BicyclePostResponse;
 import com.swp391.bike_platform.service.BicyclePostService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -21,6 +23,29 @@ public class BicyclePostController {
     public BicyclePostResponse createPost(@RequestBody BicyclePostCreateRequest request) {
         return bicyclePostService.createPost(request);
     }
+
+    // ============ ENDPOINTS FOR CURRENT USER ============
+
+    @GetMapping("/my-posts")
+    public List<BicyclePostResponse> getMyPosts(@AuthenticationPrincipal Jwt jwt) {
+        Long userId = jwt.getClaim("userId");
+        return bicyclePostService.getMyPosts(userId);
+    }
+
+    @PostMapping("/draft")
+    public BicyclePostResponse createDraftPost(@AuthenticationPrincipal Jwt jwt,
+            @RequestBody BicyclePostCreateRequest request) {
+        Long userId = jwt.getClaim("userId");
+        return bicyclePostService.createDraftPost(userId, request);
+    }
+
+    @GetMapping("/drafts")
+    public List<BicyclePostResponse> getMyDrafts(@AuthenticationPrincipal Jwt jwt) {
+        Long userId = jwt.getClaim("userId");
+        return bicyclePostService.getMyDrafts(userId);
+    }
+
+    // ============ PUBLIC ENDPOINTS ============
 
     @GetMapping
     public List<BicyclePostResponse> getAllPosts() {
