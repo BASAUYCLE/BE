@@ -1,5 +1,6 @@
 package com.swp391.bike_platform.entity;
 
+import com.swp391.bike_platform.enums.PostStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -64,7 +65,7 @@ public class BicyclePost {
 
     @Column(name = "post_status", nullable = false, length = 20)
     @Builder.Default
-    private String postStatus = "PENDING";
+    private String postStatus = PostStatus.PENDING.name();
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
