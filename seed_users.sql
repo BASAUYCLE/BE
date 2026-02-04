@@ -12,6 +12,7 @@ BEGIN
     ) 
     VALUES (
         'admin123@gmail.com', 
+        -- Password: aznh0x123anGA@
         '$2a$10$BIsHM3zGXn2riugRdfwUfOs6BpQVJTJ3ojqusyI4/skiMdnZGp6W.', 
         N'Quan Tri Vien Ten Moi', 
         '0987654321', 
@@ -38,6 +39,7 @@ BEGIN
     ) 
     VALUES (
         'inspector123@gmail.com', 
+        -- Password: aznh0x123anGA@
         '$2a$10$BIsHM3zGXn2riugRdfwUfOs6BpQVJTJ3ojqusyI4/skiMdnZGp6W.', 
         N'Nhan Vien Kiem Dinh', 
         '0987654321', 
