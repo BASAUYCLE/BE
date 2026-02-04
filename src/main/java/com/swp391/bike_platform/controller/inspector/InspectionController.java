@@ -2,7 +2,7 @@ package com.swp391.bike_platform.controller.inspector;
 
 import com.swp391.bike_platform.request.InspectionRequest;
 import com.swp391.bike_platform.response.ApiResponse;
-import com.swp391.bike_platform.response.BicyclePostResponse;
+import com.swp391.bike_platform.response.BicyclePostSummaryResponse;
 import com.swp391.bike_platform.response.inspector.InspectionReportResponse;
 import com.swp391.bike_platform.service.InspectionService;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +24,8 @@ public class InspectionController {
      * Lấy danh sách bài đăng chờ Inspector kiểm định (ADMIN_APPROVED)
      */
     @GetMapping("/pending")
-    public ApiResponse<List<BicyclePostResponse>> getPendingInspections() {
-        return ApiResponse.<List<BicyclePostResponse>>builder()
+    public ApiResponse<List<BicyclePostSummaryResponse>> getPendingInspections() {
+        return ApiResponse.<List<BicyclePostSummaryResponse>>builder()
                 .result(inspectionService.getPostsAwaitingInspection())
                 .build();
     }

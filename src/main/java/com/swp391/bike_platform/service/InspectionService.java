@@ -12,6 +12,7 @@ import com.swp391.bike_platform.repository.InspectionReportRepository;
 import com.swp391.bike_platform.repository.UserRepository;
 import com.swp391.bike_platform.request.InspectionRequest;
 import com.swp391.bike_platform.response.BicyclePostResponse;
+import com.swp391.bike_platform.response.BicyclePostSummaryResponse;
 import com.swp391.bike_platform.response.inspector.InspectionReportResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,10 +34,10 @@ public class InspectionService {
     /**
      * Lấy danh sách bài đăng chờ Inspector kiểm định (status = ADMIN_APPROVED)
      */
-    public List<BicyclePostResponse> getPostsAwaitingInspection() {
+    public List<BicyclePostSummaryResponse> getPostsAwaitingInspection() {
         List<BicyclePost> posts = bicyclePostRepository.findByPostStatus(PostStatus.ADMIN_APPROVED.name());
         return posts.stream()
-                .map(this::toPostResponse)
+                .map(this::toSummaryResponse)
                 .collect(Collectors.toList());
     }
 
@@ -126,6 +127,28 @@ public class InspectionService {
                 .postStatus(post.getPostStatus())
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
+                .build();
+    }
+
+    private BicyclePostSummaryResponse toSummaryResponse(BicyclePost post) {
+        // Find thumbnail if exists, otherwise first image, otherwise null
+        String thumbnail = post.getImages().stream()
+                .filter(img -> Boolean.TRUE.equals(img.getIsThumbnail()))
+                .map(com.swp391.bike_platform.entity.BicycleImage::getImageUrl)
+                .findFirst()
+                .orElse(post.getImages().isEmpty() ? null : post.getImages().get(0).getImageUrl());
+
+        return BicyclePostSummaryResponse.builder()
+                .postId(post.getPostId())
+                .bicycleName(post.getBicycleName())
+                .price(post.getPrice())
+                .brandName(post.getBrand().getBrandName())
+                .categoryName(post.getCategory().getCategoryName())
+                .size(post.getSize())
+                .postStatus(post.getPostStatus())
+                .thumbnailUrl(thumbnail)
+                .sellerFullName(post.getSeller().getFullName())
+                .createdAt(post.getCreatedAt())
                 .build();
     }
 }

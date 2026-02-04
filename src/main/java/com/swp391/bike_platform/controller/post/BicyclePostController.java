@@ -78,10 +78,8 @@ public class BicyclePostController {
         return bicyclePostService.getPostsBySize(size);
     }
 
-    @GetMapping("/status/{status}")
-    public List<BicyclePostResponse> getPostsByStatus(@PathVariable String status) {
-        return bicyclePostService.getPostsByStatus(status);
-    }
+    // REMOVED: /status/{status} endpoint - Security risk! Admin should use
+    // /admin/posts/status/{status}
 
     @GetMapping("/search")
     public List<BicyclePostResponse> searchPosts(
@@ -95,13 +93,16 @@ public class BicyclePostController {
 
     @PutMapping("/{postId}")
     public BicyclePostResponse updatePost(@PathVariable Long postId,
-            @RequestBody BicyclePostUpdateRequest request) {
-        return bicyclePostService.updatePost(postId, request);
+            @RequestBody BicyclePostUpdateRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+        Long userId = jwt.getClaim("userId");
+        return bicyclePostService.updatePost(postId, userId, request);
     }
 
     @DeleteMapping("/{postId}")
-    public String deletePost(@PathVariable Long postId) {
-        bicyclePostService.deletePost(postId);
+    public String deletePost(@PathVariable Long postId, @AuthenticationPrincipal Jwt jwt) {
+        Long userId = jwt.getClaim("userId");
+        bicyclePostService.deletePost(postId, userId);
         return "Bicycle post has been deleted";
     }
 }
