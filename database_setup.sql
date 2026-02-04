@@ -153,10 +153,10 @@ BEGIN
            'XXL (61 - 63) / 191 - 198 cm')),  -- Valid sizes only
         model_year INT,
         
-        -- Status
+        -- Status (PENDING → ADMIN_APPROVED → AVAILABLE)
         post_status VARCHAR(200) NOT NULL DEFAULT 'PENDING' 
-            CHECK (post_status IN ('AVAILABLE', 'DEPOSITED',
-             'SOLD', 'PENDING', 'REJECTED', 'DRAFTED')),
+            CHECK (post_status IN ('PENDING', 'ADMIN_APPROVED', 'AVAILABLE', 
+             'DEPOSITED', 'SOLD', 'REJECTED', 'DRAFTED')),
         
         -- Timestamps
         created_at DATETIME2 DEFAULT GETDATE(),
@@ -213,6 +213,43 @@ END
 ELSE
 BEGIN
     PRINT 'Table BicycleImages already exists.';
+END
+GO
+
+-- 7. Create InspectionReports Table (Báo cáo kiểm định)
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='InspectionReports' AND xtype='U')
+BEGIN
+    CREATE TABLE InspectionReports (
+        report_id BIGINT IDENTITY(1,1) PRIMARY KEY,
+        
+        -- Foreign Keys
+        post_id BIGINT NOT NULL,
+        inspector_id BIGINT NOT NULL,
+        
+        -- Inspection Result
+        inspection_result VARCHAR(20) NOT NULL CHECK (inspection_result IN ('PASS', 'FAIL')),
+        
+        -- Condition Assessment
+        overall_condition VARCHAR(50),  -- Excellent, Good, Fair, Poor
+        
+        -- Notes from Inspector
+        notes NVARCHAR(MAX),
+        
+        -- Timestamps
+        created_at DATETIME2 DEFAULT GETDATE(),
+        updated_at DATETIME2 DEFAULT GETDATE(),
+        
+        -- Foreign Key Constraints
+        CONSTRAINT FK_InspectionReports_BicyclePosts FOREIGN KEY (post_id) 
+            REFERENCES BicyclePosts(post_id) ON DELETE CASCADE,
+        CONSTRAINT FK_InspectionReports_Users FOREIGN KEY (inspector_id) 
+            REFERENCES Users(user_id)
+    );
+    PRINT 'Table InspectionReports created successfully.';
+END
+ELSE
+BEGIN
+    PRINT 'Table InspectionReports already exists.';
 END
 GO
 
