@@ -12,6 +12,8 @@ public interface BicyclePostRepository extends JpaRepository<BicyclePost, Long> 
 
     List<BicyclePost> findBySeller_UserId(Long sellerId);
 
+    List<BicyclePost> findBySeller_UserIdAndPostStatus(Long sellerId, String postStatus);
+
     List<BicyclePost> findByBrand_BrandId(Long brandId);
 
     List<BicyclePost> findByCategory_CategoryId(Long categoryId);
