@@ -207,6 +207,78 @@ public class BicyclePostService {
         return toPostResponse(updatedPost);
     }
 
+    // ============ METHODS FOR CURRENT USER ============
+
+    public List<BicyclePostResponse> getMyPosts(Long userId) {
+        // Check if user exists
+        if (!userRepository.existsById(userId)) {
+            throw new AppException(ErrorCode.USER_NOT_EXISTED);
+        }
+
+        List<BicyclePost> posts = bicyclePostRepository.findBySeller_UserId(userId);
+        return posts.stream()
+                .map(this::toPostResponse)
+                .collect(Collectors.toList());
+    }
+
+    public BicyclePostResponse createDraftPost(Long userId, BicyclePostCreateRequest request) {
+        log.info("Creating draft post for user: {}", userId);
+
+        // Validate required fields
+        validateRequiredFields(request);
+
+        // Validate size
+        if (!VALID_SIZES.contains(request.getSize())) {
+            throw new AppException(ErrorCode.INVALID_SIZE);
+        }
+
+        // Get related entities
+        User seller = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        Brand brand = brandRepository.findById(request.getBrandId())
+                .orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_EXISTED));
+
+        Category category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_EXISTED));
+
+        // Build and save post with DRAFTED status
+        BicyclePost post = BicyclePost.builder()
+                .seller(seller)
+                .brand(brand)
+                .category(category)
+                .bicycleName(request.getBicycleName().trim())
+                .bicycleColor(request.getBicycleColor().trim())
+                .price(request.getPrice())
+                .bicycleDescription(request.getBicycleDescription().trim())
+                .groupset(request.getGroupset().trim())
+                .frameMaterial(request.getFrameMaterial().trim())
+                .brakeType(request.getBrakeType().trim())
+                .size(request.getSize())
+                .modelYear(request.getModelYear())
+                .postStatus("DRAFTED")
+                .build();
+
+        BicyclePost savedPost = bicyclePostRepository.save(post);
+        log.info("Draft post created with ID: {}", savedPost.getPostId());
+
+        return toPostResponse(savedPost);
+    }
+
+    public List<BicyclePostResponse> getMyDrafts(Long userId) {
+        // Check if user exists
+        if (!userRepository.existsById(userId)) {
+            throw new AppException(ErrorCode.USER_NOT_EXISTED);
+        }
+
+        List<BicyclePost> drafts = bicyclePostRepository.findBySeller_UserIdAndPostStatus(userId, "DRAFTED");
+        return drafts.stream()
+                .map(this::toPostResponse)
+                .collect(Collectors.toList());
+    }
+
+    // ============ DELETE ============
+
     public void deletePost(Long postId) {
         if (!bicyclePostRepository.existsById(postId)) {
             throw new AppException(ErrorCode.POST_NOT_EXISTED);
