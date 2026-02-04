@@ -76,6 +76,11 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.DELETE, "/categories/**")
                                                 .hasRole(UserEnum.ADMIN.name())
 
+                                                // Posts - User's own posts endpoints (authenticated)
+                                                .requestMatchers(HttpMethod.GET, "/posts/my-posts", "/posts/drafts")
+                                                .authenticated()
+                                                .requestMatchers(HttpMethod.POST, "/posts/draft").authenticated()
+
                                                 // Posts - Public GET, Authenticated for CUD
                                                 .requestMatchers(HttpMethod.GET, "/posts", "/posts/**").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/posts").authenticated()
