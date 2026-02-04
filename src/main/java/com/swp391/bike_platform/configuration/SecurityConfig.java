@@ -41,6 +41,11 @@ public class SecurityConfig {
                                                 // Public endpoints
                                                 .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
 
+                                                // Swagger / OpenAPI
+                                                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**",
+                                                                "/swagger-ui.html")
+                                                .permitAll()
+
                                                 // Authenticated users (all roles) - PHẢI ĐẶT TRƯỚC /users/{userId}
                                                 .requestMatchers("/users/myinfo", "/users/myinfo/**").authenticated()
                                                 .requestMatchers("/api/upload/**").authenticated()
@@ -90,6 +95,12 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.POST, "/posts").authenticated()
                                                 .requestMatchers(HttpMethod.PUT, "/posts/**").authenticated()
                                                 .requestMatchers(HttpMethod.DELETE, "/posts/**").authenticated()
+
+                                                // Images - Public GET, Authenticated for CUD
+                                                .requestMatchers(HttpMethod.GET, "/images", "/images/**").permitAll()
+                                                .requestMatchers(HttpMethod.POST, "/images").authenticated()
+                                                .requestMatchers(HttpMethod.PUT, "/images/**").authenticated()
+                                                .requestMatchers(HttpMethod.DELETE, "/images/**").authenticated()
 
                                                 // All other requests need authentication
                                                 .anyRequest().authenticated())
