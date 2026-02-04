@@ -57,6 +57,10 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.DELETE, "/users/{userId}")
                                                 .hasRole(UserEnum.ADMIN.name())
 
+                                                // Inspector only endpoints
+                                                .requestMatchers("/inspection/**")
+                                                .hasRole(UserEnum.INSPECTOR.name())
+
                                                 // Brands - Public GET, Admin for CUD
                                                 .requestMatchers(HttpMethod.GET, "/brands", "/brands/**").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/brands")
