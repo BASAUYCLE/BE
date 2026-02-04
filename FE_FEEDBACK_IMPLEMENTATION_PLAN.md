@@ -193,10 +193,13 @@ Dựa trên source code hiện có và yêu cầu của bạn, tôi đề xuất
 | ✅ | DELETE | `/users/{userId}` | Xóa user (ADMIN) |
 | | **Image Upload** | | |
 | ✅ | POST | `/api/upload/image` | Upload ảnh (Cloudinary) |
-| | **Inspection (chưa implement)** | | |
-| ❌ | GET | `/inspection/pending` | Bài đăng chờ kiểm định (INSPECTOR) |
-| ❌ | PUT | `/inspection/{id}/approve` | Duyệt bài đăng (INSPECTOR) |
-| ❌ | PUT | `/inspection/{id}/reject` | Từ chối bài đăng (INSPECTOR) |
+| | **Admin Post Approval** | | |
+| 🔧 | GET | `/admin/posts/pending` | Bài chờ Admin duyệt (PENDING) |
+| 🔧 | PUT | `/admin/posts/{postId}/approve` | Admin duyệt → ADMIN_APPROVED |
+| 🔧 | PUT | `/admin/posts/{postId}/reject` | Admin từ chối → REJECTED |
+| | **Inspection (Inspector)** | | |
+| 🔧 | GET | `/inspection/pending` | Bài chờ Inspector (ADMIN_APPROVED) |
+| 🔧 | POST | `/inspection/{postId}/submit` | Nộp kết quả (PASS/FAIL) |
 | | **Wishlist (Phase 2)** | | |
 | ❌ | POST | `/wishlist/{postId}` | Thêm vào yêu thích |
 | ❌ | DELETE | `/wishlist/{postId}` | Xóa khỏi yêu thích |
