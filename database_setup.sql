@@ -59,16 +59,31 @@ BEGIN
         updated_at DATETIME2 DEFAULT GETDATE()
     );
     PRINT 'Table Brands created successfully.';
-    
-    -- Seed data for Brands
-    INSERT INTO Brands (brand_name, brand_origin_country) VALUES 
-        ('Giant', 'Taiwan'),
-        ('Merida', 'Taiwan'),
-        ('Pinarello', 'Italy'),
-        ('Specialized', 'USA'),
-        ('Trek', 'USA'),
-        ('Others', 'Unknown');
-    PRINT 'Seed data for Brands inserted.';
+END
+ELSE
+BEGIN
+    PRINT 'Table Brands already exists.';
+END
+GO
+
+-- Seed data for Brands
+IF EXISTS (SELECT * FROM sysobjects WHERE name='Brands' AND xtype='U')
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM Brands)
+    BEGIN
+        INSERT INTO Brands (brand_name, brand_origin_country) VALUES 
+            ('Giant', 'Taiwan'),
+            ('Merida', 'Taiwan'),
+            ('Pinarello', 'Italy'),
+            ('Specialized', 'USA'),
+            ('Trek', 'USA'),
+            ('Others', 'Unknown');
+        PRINT 'Seed data for Brands inserted.';
+    END
+    ELSE
+    BEGIN
+        PRINT 'Brands table already has data. Skipping seed.';
+    END
 END
 GO
 
@@ -83,16 +98,31 @@ BEGIN
         updated_at DATETIME2 DEFAULT GETDATE()
     );
     PRINT 'Table Categories created successfully.';
-    
-    -- Seed data for Categories
-    INSERT INTO Categories (category_name, category_description) VALUES 
-        ('Road Bike', N'Xe đạp đường trường'),
-        ('Mountain Bike', N'Xe đạp địa hình'),
-        ('Gravel Bike', N'Xe đạp đa địa hình'),
-        ('City Bike', N'Xe đạp thành phố'),
-        ('E-Bike', N'Xe đạp điện'),
-        ('Others', N'Loại xe khác');
-    PRINT 'Seed data for Categories inserted.';
+END
+ELSE
+BEGIN
+    PRINT 'Table Categories already exists.';
+END
+GO
+
+-- Seed data for Categories
+IF EXISTS (SELECT * FROM sysobjects WHERE name='Categories' AND xtype='U')
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM Categories)
+    BEGIN
+        INSERT INTO Categories (category_name, category_description) VALUES 
+            ('Road Bike', N'Xe đạp đường trường'),
+            ('Mountain Bike', N'Xe đạp địa hình'),
+            ('Gravel Bike', N'Xe đạp đa địa hình'),
+            ('City Bike', N'Xe đạp thành phố'),
+            ('E-Bike', N'Xe đạp điện'),
+            ('Others', N'Loại xe khác');
+        PRINT 'Seed data for Categories inserted.';
+    END
+    ELSE
+    BEGIN
+        PRINT 'Categories table already has data. Skipping seed.';
+    END
 END
 GO
 
@@ -139,6 +169,10 @@ BEGIN
     );
     PRINT 'Table BicyclePosts created successfully.';
 END
+ELSE
+BEGIN
+    PRINT 'Table BicyclePosts already exists.';
+END
 GO
 
 -- 6. Create BicycleImages Table (Ảnh xe đạp)
@@ -175,6 +209,10 @@ BEGIN
             REFERENCES BicyclePosts(post_id) ON DELETE CASCADE
     );
     PRINT 'Table BicycleImages created successfully.';
+END
+ELSE
+BEGIN
+    PRINT 'Table BicycleImages already exists.';
 END
 GO
 
