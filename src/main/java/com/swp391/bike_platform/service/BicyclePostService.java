@@ -6,6 +6,7 @@ import com.swp391.bike_platform.entity.Brand;
 import com.swp391.bike_platform.entity.Category;
 import com.swp391.bike_platform.entity.User;
 import com.swp391.bike_platform.enums.ErrorCode;
+import com.swp391.bike_platform.enums.PostStatus;
 import com.swp391.bike_platform.exception.AppException;
 import com.swp391.bike_platform.repository.BicyclePostRepository;
 import com.swp391.bike_platform.repository.BrandRepository;
@@ -77,7 +78,7 @@ public class BicyclePostService {
                 .brakeType(request.getBrakeType().trim())
                 .size(request.getSize())
                 .modelYear(request.getModelYear())
-                .postStatus("PENDING")
+                .postStatus(PostStatus.PENDING.name())
                 .build();
 
         BicyclePost savedPost = bicyclePostRepository.save(post);
@@ -190,14 +191,14 @@ public class BicyclePostService {
         log.info("Updating post {} with status: {}", postId, currentStatus);
 
         // Check if update is allowed based on status
-        if ("PENDING".equals(currentStatus)) {
+        if (PostStatus.PENDING.name().equals(currentStatus)) {
             // Allow full update
             updateAllFields(post, request);
-        } else if ("AVAILABLE".equals(currentStatus)) {
+        } else if (PostStatus.AVAILABLE.name().equals(currentStatus)) {
             // Only allow color, size, description update
             updateLimitedFields(post, request);
         } else {
-            // DEPOSITED, SOLD, REJECTED - no update allowed
+            // DEPOSITED, SOLD, REJECTED, ADMIN_APPROVED - no update allowed
             throw new AppException(ErrorCode.POST_UPDATE_NOT_ALLOWED);
         }
 
@@ -276,8 +277,6 @@ public class BicyclePostService {
                 .map(this::toPostResponse)
                 .collect(Collectors.toList());
     }
-
-    // ============ DELETE ============
 
     public void deletePost(Long postId) {
         if (!bicyclePostRepository.existsById(postId)) {
