@@ -37,6 +37,7 @@ public enum ErrorCode {
     INVALID_VERIFY_ACTION(1030, "Invalid action. Use APPROVE or REJECT", HttpStatus.BAD_REQUEST),
     USER_ALREADY_VERIFIED(1031, "User is already verified", HttpStatus.BAD_REQUEST),
     USER_ALREADY_REJECTED(1032, "User is already rejected", HttpStatus.BAD_REQUEST),
+    INVALID_POST_STATUS(1033, "Invalid post status for this action", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatus statusCode) {
