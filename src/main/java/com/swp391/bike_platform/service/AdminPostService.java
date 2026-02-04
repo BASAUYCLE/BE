@@ -31,6 +31,25 @@ public class AdminPostService {
     }
 
     /**
+     * Lấy TẤT CẢ bài đăng (Admin only)
+     */
+    public List<BicyclePostResponse> getAllPosts() {
+        return bicyclePostRepository.findAll().stream()
+                .map(this::toPostResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Lấy bài đăng theo status cụ thể (Admin only)
+     */
+    public List<BicyclePostResponse> getPostsByStatus(String status) {
+        List<BicyclePost> posts = bicyclePostRepository.findByPostStatus(status.toUpperCase());
+        return posts.stream()
+                .map(this::toPostResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Admin duyệt bài đăng: PENDING -> ADMIN_APPROVED
      */
     public BicyclePostResponse approvePost(Long postId) {
@@ -60,6 +79,19 @@ public class AdminPostService {
         post.setPostStatus(PostStatus.REJECTED.name());
         BicyclePost savedPost = bicyclePostRepository.save(post);
         log.info("Post {} rejected by Admin", postId);
+
+        return toPostResponse(savedPost);
+    }
+
+    /**
+     * Admin ẩn bài đăng (soft delete): Any status -> HIDDEN
+     */
+    public BicyclePostResponse hidePost(Long postId) {
+        BicyclePost post = findPostById(postId);
+
+        post.setPostStatus(PostStatus.HIDDEN.name());
+        BicyclePost savedPost = bicyclePostRepository.save(post);
+        log.info("Post {} hidden by Admin (soft delete)", postId);
 
         return toPostResponse(savedPost);
     }
