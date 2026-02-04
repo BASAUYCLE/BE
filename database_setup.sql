@@ -156,7 +156,7 @@ BEGIN
         -- Status
         post_status VARCHAR(200) NOT NULL DEFAULT 'PENDING' 
             CHECK (post_status IN ('AVAILABLE', 'DEPOSITED',
-             'SOLD', 'PENDING', 'REJECTED')),
+             'SOLD', 'PENDING', 'REJECTED', 'DRAFTED')),
         
         -- Timestamps
         created_at DATETIME2 DEFAULT GETDATE(),
