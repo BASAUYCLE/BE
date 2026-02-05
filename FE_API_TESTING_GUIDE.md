@@ -333,3 +333,332 @@ Sau khi authorize, Swagger sẽ tự động gửi token trong header cho mọi 
 
 4. **Test public endpoints:**
    - Không gửi token khi gọi `GET /posts` → Phải hoạt động bình thường
+
+---
+
+## 🔄 Chi Tiết Luồng: Member Đăng Bài → Admin Duyệt → Inspector Kiểm Định
+
+### 📍 PHASE 1: Member Đăng Bài
+
+#### Bước 1.1: Member đăng nhập
+```http
+POST /auth/login
+Content-Type: application/json
+
+{
+  "email": "member@example.com",
+  "password": "password123"
+}
+```
+
+**Response:**
+```json
+{
+  "code": 0,
+  "result": {
+    "token": "eyJhbGciOiJIUzUxMiJ9.xxxxx...",
+    "authenticated": true
+  }
+}
+```
+→ **Lưu `token` này làm `member_token`**
+
+---
+
+#### Bước 1.2: Member tạo bài đăng mới
+```http
+POST /posts
+Authorization: Bearer <member_token>
+Content-Type: application/json
+
+{
+  "sellerId": 1,
+  "brandId": 1,
+  "categoryId": 1,
+  "bicycleName": "Giant TCR Advanced",
+  "bicycleColor": "Red",
+  "price": 25000000,
+  "bicycleDescription": "Xe đạp road bike cao cấp, đi được 500km",
+  "groupset": "Shimano 105",
+  "frameMaterial": "Carbon",
+  "brakeType": "Disc Brake",
+  "size": "M (53 - 55) / 165 - 175 cm",
+  "modelYear": 2023
+}
+```
+
+**Response:**
+```json
+{
+  "code": 0,
+  "result": {
+    "postId": 8,
+    "bicycleName": "Giant TCR Advanced",
+    "postStatus": "PENDING",
+    "images": [],
+    ...
+  }
+}
+```
+→ **Lưu `postId` (ví dụ: 8)**
+→ **Status ban đầu: `PENDING`**
+
+---
+
+#### Bước 1.3: Member upload ảnh cho bài đăng
+```http
+POST /images
+Authorization: Bearer <member_token>
+Content-Type: multipart/form-data
+
+postId: 8
+imageFile: <file>
+imageType: THUMBNAIL
+isThumbnail: true
+```
+
+**Response:**
+```json
+{
+  "code": 0,
+  "result": {
+    "imageId": 15,
+    "postId": 8,
+    "imageUrl": "https://res.cloudinary.com/xxx/image.jpg",
+    "imageType": "THUMBNAIL",
+    "isThumbnail": true
+  }
+}
+```
+
+> ⚠️ **Lưu ý:** Upload thêm ảnh với `isThumbnail: false` cho các ảnh chi tiết khác
+
+---
+
+### 📍 PHASE 2: Admin Duyệt Bài
+
+#### Bước 2.1: Admin đăng nhập
+```http
+POST /auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "password123"
+}
+```
+→ **Lưu `token` làm `admin_token`**
+
+---
+
+#### Bước 2.2: Admin xem danh sách bài chờ duyệt
+```http
+GET /admin/posts/pending
+Authorization: Bearer <admin_token>
+```
+
+**Response:** (Chỉ có thumbnail để xem nhanh)
+```json
+{
+  "code": 0,
+  "result": [
+    {
+      "postId": 8,
+      "bicycleName": "Giant TCR Advanced",
+      "price": 25000000,
+      "postStatus": "PENDING",
+      "images": [
+        {
+          "imageId": 15,
+          "imageUrl": "https://cloudinary.../thumb.jpg",
+          "isThumbnail": true
+        }
+      ],
+      ...
+    }
+  ]
+}
+```
+
+---
+
+#### Bước 2.3: Admin duyệt bài
+```http
+PUT /admin/posts/8/approve
+Authorization: Bearer <admin_token>
+```
+
+**Response:**
+```json
+{
+  "code": 0,
+  "result": {
+    "postId": 8,
+    "postStatus": "ADMIN_APPROVED",
+    ...
+  }
+}
+```
+→ **Status chuyển: `PENDING` → `ADMIN_APPROVED`**
+
+---
+
+### 📍 PHASE 3: Inspector Kiểm Định
+
+#### Bước 3.1: Inspector đăng nhập
+```http
+POST /auth/login
+Content-Type: application/json
+
+{
+  "email": "inspector@example.com",
+  "password": "password123"
+}
+```
+→ **Lưu `token` làm `inspector_token`**
+
+---
+
+#### Bước 3.2: Inspector xem danh sách bài chờ kiểm định
+```http
+GET /inspection/pending
+Authorization: Bearer <inspector_token>
+```
+
+**Response:** (Summary - chỉ có thumbnail)
+```json
+{
+  "code": 0,
+  "result": [
+    {
+      "postId": 8,
+      "bicycleName": "Giant TCR Advanced",
+      "price": 25000000,
+      "brandName": "Giant",
+      "categoryName": "Road Bike",
+      "size": "M (53 - 55) / 165 - 175 cm",
+      "postStatus": "ADMIN_APPROVED",
+      "thumbnailUrl": "https://cloudinary.../thumb.jpg",
+      "sellerFullName": "Nguyen Van A",
+      "createdAt": "2026-02-05T10:00:00"
+    }
+  ]
+}
+```
+
+---
+
+#### Bước 3.3: Inspector xem chi tiết bài đăng (TẤT CẢ ảnh)
+```http
+GET /posts/8
+Authorization: Bearer <inspector_token>
+```
+
+**Response:** (Full details - có TẤT CẢ ảnh)
+```json
+{
+  "code": 0,
+  "result": {
+    "postId": 8,
+    "bicycleName": "Giant TCR Advanced",
+    "bicycleDescription": "Xe đạp road bike cao cấp, đi được 500km",
+    "groupset": "Shimano 105",
+    "frameMaterial": "Carbon",
+    "brakeType": "Disc Brake",
+    "postStatus": "ADMIN_APPROVED",
+    "images": [
+      {
+        "imageId": 15,
+        "imageUrl": "https://cloudinary.../thumb.jpg",
+        "imageType": "THUMBNAIL",
+        "isThumbnail": true
+      },
+      {
+        "imageId": 16,
+        "imageUrl": "https://cloudinary.../detail1.jpg",
+        "imageType": "GENERAL",
+        "isThumbnail": false
+      },
+      {
+        "imageId": 17,
+        "imageUrl": "https://cloudinary.../detail2.jpg",
+        "imageType": "GENERAL",
+        "isThumbnail": false
+      }
+    ],
+    ...
+  }
+}
+```
+
+---
+
+#### Bước 3.4: Inspector nộp kết quả kiểm định
+
+**Trường hợp PASS (Đạt):**
+```http
+POST /inspection/8/submit
+Authorization: Bearer <inspector_token>
+Content-Type: application/json
+
+{
+  "result": "PASS",
+  "overallCondition": "EXCELLENT",
+  "notes": "Xe đạp trong tình trạng rất tốt, khung carbon không nứt, phanh hoạt động tốt"
+}
+```
+
+**Response:**
+```json
+{
+  "code": 0,
+  "result": {
+    "reportId": 1,
+    "postId": 8,
+    "result": "PASS",
+    "overallCondition": "EXCELLENT",
+    "notes": "Xe đạp trong tình trạng rất tốt...",
+    "inspectorName": "Inspector Name",
+    "inspectedAt": "2026-02-05T11:00:00"
+  }
+}
+```
+→ **Status chuyển: `ADMIN_APPROVED` → `AVAILABLE`**
+
+---
+
+**Trường hợp FAIL (Không đạt):**
+```http
+POST /inspection/8/submit
+Authorization: Bearer <inspector_token>
+Content-Type: application/json
+
+{
+  "result": "FAIL",
+  "overallCondition": "POOR",
+  "notes": "Khung xe có vết nứt, không đảm bảo an toàn"
+}
+```
+→ **Status chuyển: `ADMIN_APPROVED` → `REJECTED`**
+
+---
+
+## 📊 Tổng Kết Luồng
+
+| Phase | Actor | API | Status Trước | Status Sau |
+|-------|-------|-----|--------------|------------|
+| 1 | Member | `POST /posts` | - | `PENDING` |
+| 2 | Admin | `PUT /admin/posts/{id}/approve` | `PENDING` | `ADMIN_APPROVED` |
+| 3a | Inspector | `POST /inspection/{id}/submit` (PASS) | `ADMIN_APPROVED` | `AVAILABLE` |
+| 3b | Inspector | `POST /inspection/{id}/submit` (FAIL) | `ADMIN_APPROVED` | `REJECTED` |
+
+---
+
+## 📋 overallCondition Values (Tình trạng tổng thể)
+
+| Value | Ý nghĩa |
+|-------|---------|
+| `EXCELLENT` | Xuất sắc - Như mới |
+| `GOOD` | Tốt - Có dấu hiệu sử dụng nhẹ |
+| `FAIR` | Trung bình - Có hao mòn rõ |
+| `POOR` | Kém - Cần sửa chữa |
