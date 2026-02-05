@@ -1,10 +1,12 @@
 package com.swp391.bike_platform.service;
 
+import com.swp391.bike_platform.entity.BicycleImage;
 import com.swp391.bike_platform.entity.BicyclePost;
 import com.swp391.bike_platform.enums.ErrorCode;
 import com.swp391.bike_platform.enums.PostStatus;
 import com.swp391.bike_platform.exception.AppException;
 import com.swp391.bike_platform.repository.BicyclePostRepository;
+import com.swp391.bike_platform.response.BicycleImageResponse;
 import com.swp391.bike_platform.response.BicyclePostResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -102,6 +104,11 @@ public class AdminPostService {
     }
 
     private BicyclePostResponse toPostResponse(BicyclePost post) {
+        List<BicycleImageResponse> imageResponses = post.getImages().stream()
+                .filter(image -> Boolean.TRUE.equals(image.getIsThumbnail()))
+                .map(this::toImageResponse)
+                .collect(Collectors.toList());
+
         return BicyclePostResponse.builder()
                 .postId(post.getPostId())
                 .sellerId(post.getSeller().getUserId())
@@ -123,6 +130,19 @@ public class AdminPostService {
                 .postStatus(post.getPostStatus())
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
+                .images(imageResponses)
+                .build();
+    }
+
+    private BicycleImageResponse toImageResponse(BicycleImage image) {
+        return BicycleImageResponse.builder()
+                .imageId(image.getImageId())
+                .postId(image.getPost().getPostId())
+                .imageUrl(image.getImageUrl())
+                .imageType(image.getImageType())
+                .isThumbnail(image.getIsThumbnail())
+                .createdAt(image.getCreatedAt())
+                .updatedAt(image.getUpdatedAt())
                 .build();
     }
 }
