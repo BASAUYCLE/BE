@@ -38,6 +38,8 @@ public enum ErrorCode {
     USER_ALREADY_VERIFIED(1031, "User is already verified", HttpStatus.BAD_REQUEST),
     USER_ALREADY_REJECTED(1032, "User is already rejected", HttpStatus.BAD_REQUEST),
     INVALID_POST_STATUS(1033, "Invalid post status for this action", HttpStatus.BAD_REQUEST),
+    WISHLIST_ALREADY_EXISTS(1034, "Post already in wishlist", HttpStatus.BAD_REQUEST),
+    WISHLIST_NOT_FOUND(1035, "Post not in wishlist", HttpStatus.NOT_FOUND),
     ;
 
     ErrorCode(int code, String message, HttpStatus statusCode) {
