@@ -253,6 +253,35 @@ BEGIN
 END
 GO
 
+-- 8. Create Wishlists Table (Danh sách yêu thích)
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Wishlists' AND xtype='U')
+BEGIN
+    CREATE TABLE Wishlists (
+        wishlist_id BIGINT IDENTITY(1,1) PRIMARY KEY,
+        
+        -- Foreign Keys
+        user_id BIGINT NOT NULL,
+        post_id BIGINT NOT NULL,
+        
+        -- Timestamps
+        created_at DATETIME2 DEFAULT GETDATE(),
+        
+        -- Foreign Key Constraints
+        CONSTRAINT FK_Wishlists_Users FOREIGN KEY (user_id) REFERENCES Users(user_id),
+        CONSTRAINT FK_Wishlists_BicyclePosts FOREIGN KEY (post_id) 
+            REFERENCES BicyclePosts(post_id) ON DELETE CASCADE,
+        
+        -- Prevent duplicate wishlist entries
+        CONSTRAINT UQ_Wishlists_User_Post UNIQUE (user_id, post_id)
+    );
+    PRINT 'Table Wishlists created successfully.';
+END
+ELSE
+BEGIN
+    PRINT 'Table Wishlists already exists.';
+END
+GO
+
 PRINT '========================================';
 PRINT 'All tables created successfully!';
 PRINT '========================================';
