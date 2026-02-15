@@ -102,6 +102,14 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.PUT, "/images/**").authenticated()
                                                 .requestMatchers(HttpMethod.DELETE, "/images/**").authenticated()
 
+                                                // Wishlist - Authenticated only (user manages own wishlist)
+                                                .requestMatchers(HttpMethod.GET, "/wishlist", "/wishlist/**")
+                                                .authenticated()
+                                                .requestMatchers(HttpMethod.POST, "/wishlist/**")
+                                                .authenticated()
+                                                .requestMatchers(HttpMethod.DELETE, "/wishlist/**")
+                                                .authenticated()
+
                                                 // All other requests need authentication
                                                 .anyRequest().authenticated())
                                 .oauth2ResourceServer(oauth2 -> oauth2
