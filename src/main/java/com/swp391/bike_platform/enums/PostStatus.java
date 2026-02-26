@@ -7,5 +7,6 @@ public enum PostStatus {
     DEPOSITED,
     SOLD,
     REJECTED,
-    HIDDEN
+    HIDDEN,
+    DRAFTED
 }

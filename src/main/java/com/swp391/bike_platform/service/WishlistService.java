@@ -5,6 +5,7 @@ import com.swp391.bike_platform.entity.BicyclePost;
 import com.swp391.bike_platform.entity.User;
 import com.swp391.bike_platform.entity.Wishlist;
 import com.swp391.bike_platform.enums.ErrorCode;
+import com.swp391.bike_platform.enums.PostStatus;
 import com.swp391.bike_platform.exception.AppException;
 import com.swp391.bike_platform.repository.BicyclePostRepository;
 import com.swp391.bike_platform.repository.UserRepository;
@@ -38,6 +39,16 @@ public class WishlistService {
 
         BicyclePost post = bicyclePostRepository.findById(postId)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_EXISTED));
+
+        // Cannot add own post to wishlist
+        if (post.getSeller().getUserId().equals(userId)) {
+            throw new AppException(ErrorCode.CANNOT_WISHLIST_OWN_POST);
+        }
+
+        // Only allow adding AVAILABLE posts
+        if (!PostStatus.AVAILABLE.name().equals(post.getPostStatus())) {
+            throw new AppException(ErrorCode.POST_NOT_AVAILABLE);
+        }
 
         Wishlist wishlist = Wishlist.builder()
                 .user(user)

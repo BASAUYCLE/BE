@@ -38,8 +38,15 @@ public enum ErrorCode {
     USER_ALREADY_VERIFIED(1031, "User is already verified", HttpStatus.BAD_REQUEST),
     USER_ALREADY_REJECTED(1032, "User is already rejected", HttpStatus.BAD_REQUEST),
     INVALID_POST_STATUS(1033, "Invalid post status for this action", HttpStatus.BAD_REQUEST),
-    WISHLIST_ALREADY_EXISTS(1034, "Post already in wishlist", HttpStatus.BAD_REQUEST),
-    WISHLIST_NOT_FOUND(1035, "Post not in wishlist", HttpStatus.NOT_FOUND),
+    INVALID_RESET_TOKEN(1034, "Reset token is invalid", HttpStatus.BAD_REQUEST),
+    RESET_TOKEN_EXPIRED(1035, "Reset token has expired", HttpStatus.BAD_REQUEST),
+    WEAK_PASSWORD(1036,
+            "Password must contain at least 8 characters, including uppercase, lowercase, number and special character",
+            HttpStatus.BAD_REQUEST),
+    WISHLIST_ALREADY_EXISTS(1037, "Post already in wishlist", HttpStatus.BAD_REQUEST),
+    WISHLIST_NOT_FOUND(1038, "Post not in wishlist", HttpStatus.NOT_FOUND),
+    CANNOT_WISHLIST_OWN_POST(1039, "Cannot add your own post to wishlist", HttpStatus.BAD_REQUEST),
+    POST_NOT_AVAILABLE(1040, "Post is not available", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatus statusCode) {
