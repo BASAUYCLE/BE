@@ -42,3 +42,7 @@ cloudinary:
 jwt:
   signer-key: "S7RxfF0UMgBdOAfHdDjklZm7lF3rTLjqWNrDgcXsNqm8Yw3KeVf9aHbPnYcXzJhQ"  # Generate from https://generate-secret.vercel.app/64
   expiration: 3600  # 1 hour in seconds
+
+app:
+  frontend-url: http://localhost:5173
+  logo-url: https://res.cloudinary.com/dod2rhslh/image/upload/v1772115369/logo_project_cv0djb.png

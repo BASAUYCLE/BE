@@ -1,7 +1,9 @@
 package com.swp391.bike_platform.controller.auth;
 
 import com.swp391.bike_platform.entity.User;
+import com.swp391.bike_platform.request.ForgotPasswordRequest;
 import com.swp391.bike_platform.request.IntrospectRequest;
+import com.swp391.bike_platform.request.ResetPasswordRequest;
 import com.swp391.bike_platform.request.UserLoginRequest;
 import com.swp391.bike_platform.request.UserRegisterRequest;
 import com.swp391.bike_platform.response.ApiResponse;
@@ -9,6 +11,7 @@ import com.swp391.bike_platform.response.AuthenticationResponse;
 import com.swp391.bike_platform.response.IntrospectResponse;
 import com.swp391.bike_platform.response.member.UserResponse;
 import com.swp391.bike_platform.service.AuthenticationService;
+import com.swp391.bike_platform.service.PasswordResetService;
 import com.swp391.bike_platform.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
         private final UserService userService;
         private final AuthenticationService authenticationService;
+        private final PasswordResetService passwordResetService;
 
         @PostMapping("/register")
         ApiResponse<UserResponse> register(
@@ -51,6 +55,22 @@ public class AuthController {
                 IntrospectResponse result = authenticationService.introspect(request);
                 return ApiResponse.<IntrospectResponse>builder()
                                 .result(result)
+                                .build();
+        }
+
+        @PostMapping("/forgot-password")
+        ApiResponse<Void> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
+                passwordResetService.requestPasswordReset(request.getEmail());
+                return ApiResponse.<Void>builder()
+                                .message("Password reset link has been sent to your email")
+                                .build();
+        }
+
+        @PostMapping("/reset-password")
+        ApiResponse<Void> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
+                passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
+                return ApiResponse.<Void>builder()
+                                .message("Password has been reset successfully")
                                 .build();
         }
 }
