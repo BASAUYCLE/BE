@@ -46,6 +46,12 @@ public class BicyclePostController {
         return bicyclePostService.getMyDrafts(userId);
     }
 
+    @PutMapping("/draft/{postId}/submit")
+    public BicyclePostResponse submitDraft(@PathVariable Long postId, @AuthenticationPrincipal Jwt jwt) {
+        Long userId = jwt.getClaim("userId");
+        return bicyclePostService.submitDraft(postId, userId);
+    }
+
     // ============ PUBLIC ENDPOINTS ============
 
     @GetMapping

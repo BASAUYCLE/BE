@@ -213,8 +213,8 @@ public class BicyclePostService {
     public BicyclePostResponse createDraftPost(Long userId, BicyclePostCreateRequest request) {
         log.info("Creating draft post for user: {}", userId);
 
-        // Validate required fields
-        validateRequiredFields(request);
+        // Validate only required fields for draft (DB NOT NULL constraints)
+        validateDraftFields(request);
 
         // Get related entities
         User seller = userRepository.findById(userId)
@@ -226,18 +226,19 @@ public class BicyclePostService {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_EXISTED));
 
-        // Build and save post with DRAFTED status
+        // Build and save post with DRAFTED status (optional fields may be null)
         BicyclePost post = BicyclePost.builder()
                 .seller(seller)
                 .brand(brand)
                 .category(category)
                 .bicycleName(request.getBicycleName().trim())
-                .bicycleColor(request.getBicycleColor().trim())
+                .bicycleColor(request.getBicycleColor() != null ? request.getBicycleColor().trim() : null)
                 .price(request.getPrice())
-                .bicycleDescription(request.getBicycleDescription().trim())
-                .groupset(request.getGroupset().trim())
-                .frameMaterial(request.getFrameMaterial().trim())
-                .brakeType(request.getBrakeType().trim())
+                .bicycleDescription(
+                        request.getBicycleDescription() != null ? request.getBicycleDescription().trim() : null)
+                .groupset(request.getGroupset() != null ? request.getGroupset().trim() : null)
+                .frameMaterial(request.getFrameMaterial() != null ? request.getFrameMaterial().trim() : null)
+                .brakeType(request.getBrakeType() != null ? request.getBrakeType().trim() : null)
                 .size(request.getSize())
                 .modelYear(request.getModelYear())
                 .postStatus("DRAFTED")
@@ -259,6 +260,52 @@ public class BicyclePostService {
         return drafts.stream()
                 .map(this::toPostResponse)
                 .collect(Collectors.toList());
+    }
+
+    public BicyclePostResponse submitDraft(Long postId, Long userId) {
+        log.info("Submitting draft post {} by user {}", postId, userId);
+
+        BicyclePost post = findPostById(postId);
+
+        // Check ownership
+        if (!post.getSeller().getUserId().equals(userId)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // Check status is DRAFTED
+        if (!PostStatus.DRAFTED.name().equals(post.getPostStatus())) {
+            throw new AppException(ErrorCode.POST_NOT_DRAFT);
+        }
+
+        // Validate all fields are complete before submitting
+        validateDraftComplete(post);
+
+        // Transition to PENDING
+        post.setPostStatus(PostStatus.PENDING.name());
+        BicyclePost savedPost = bicyclePostRepository.save(post);
+        log.info("Draft post {} submitted, now PENDING", postId);
+
+        return toPostResponse(savedPost);
+    }
+
+    // ============ DRAFT VALIDATION HELPERS ============
+
+    private void validateDraftFields(BicyclePostCreateRequest request) {
+        if (request.getBrandId() == null || request.getCategoryId() == null ||
+                request.getBicycleName() == null || request.getPrice() == null) {
+            throw new AppException(ErrorCode.MISSING_REQUIRED_FIELD);
+        }
+    }
+
+    private void validateDraftComplete(BicyclePost post) {
+        if (post.getBrand() == null || post.getCategory() == null ||
+                post.getBicycleName() == null || post.getBicycleColor() == null ||
+                post.getPrice() == null || post.getBicycleDescription() == null ||
+                post.getGroupset() == null || post.getFrameMaterial() == null ||
+                post.getBrakeType() == null || post.getSize() == null ||
+                post.getModelYear() == null) {
+            throw new AppException(ErrorCode.DRAFT_INCOMPLETE);
+        }
     }
 
     public void deletePost(Long postId, Long userId) {

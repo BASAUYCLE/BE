@@ -47,6 +47,8 @@ public enum ErrorCode {
     WISHLIST_NOT_FOUND(1038, "Post not in wishlist", HttpStatus.NOT_FOUND),
     CANNOT_WISHLIST_OWN_POST(1039, "Cannot add your own post to wishlist", HttpStatus.BAD_REQUEST),
     POST_NOT_AVAILABLE(1040, "Post is not available", HttpStatus.BAD_REQUEST),
+    DRAFT_INCOMPLETE(1041, "Draft is incomplete, all fields are required before submitting", HttpStatus.BAD_REQUEST),
+    POST_NOT_DRAFT(1042, "Post is not in DRAFTED status", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatus statusCode) {
