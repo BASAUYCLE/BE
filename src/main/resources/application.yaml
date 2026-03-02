@@ -46,3 +46,10 @@ jwt:
 app:
   frontend-url: http://localhost:5173
   logo-url: https://res.cloudinary.com/dod2rhslh/image/upload/v1772115369/logo_project_cv0djb.png
+
+# VNPay Sandbox Configuration
+vnpay:
+  tmn-code: H7VT6G30
+  hash-secret: PQ7QDHDXC2G8OV1DNFV6B3YXBEQOQUYH
+  pay-url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+  return-url: http://localhost:8080/payment/vnpay/callback

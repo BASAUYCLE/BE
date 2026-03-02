@@ -52,6 +52,12 @@ public enum ErrorCode {
     PROVINCE_NOT_FOUND(1043, "Province not found", HttpStatus.NOT_FOUND),
     COMMUNE_NOT_FOUND(1044, "Commune not found", HttpStatus.NOT_FOUND),
     ADDRESS_NOT_FOUND(1045, "Address not found", HttpStatus.NOT_FOUND),
+    WALLET_NOT_FOUND(1046, "Wallet not found", HttpStatus.NOT_FOUND),
+    INSUFFICIENT_BALANCE(1047, "Insufficient balance", HttpStatus.BAD_REQUEST),
+    TRANSACTION_NOT_FOUND(1048, "Transaction not found", HttpStatus.NOT_FOUND),
+    VNPAY_INVALID_CHECKSUM(1049, "VNPay checksum verification failed", HttpStatus.BAD_REQUEST),
+    VNPAY_PAYMENT_FAILED(1050, "VNPay payment failed", HttpStatus.BAD_REQUEST),
+    TOP_UP_MIN_AMOUNT(1051, "Minimum top-up amount is 10,000 VND", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatus statusCode) {

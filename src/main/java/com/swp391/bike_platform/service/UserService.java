@@ -147,6 +147,14 @@ public class UserService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
     }
 
+    /**
+     * Get User entity by email (for JWT-based controllers)
+     */
+    public User getUserEntityByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+    }
+
     private UserResponse toUserResponse(User user) {
         return UserResponse.builder()
                 .userId(user.getUserId())

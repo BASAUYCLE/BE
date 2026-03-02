@@ -117,6 +117,15 @@ public class SecurityConfig {
                                                 .requestMatchers("/users/*/addresses", "/users/*/addresses/**")
                                                 .authenticated()
 
+                                                // Wallet - Authenticated
+                                                .requestMatchers("/wallet", "/wallet/**").authenticated()
+
+                                                // Transactions - Authenticated
+                                                .requestMatchers("/transactions", "/transactions/**").authenticated()
+
+                                                // VNPay callback - Public (browser redirect)
+                                                .requestMatchers(HttpMethod.GET, "/payment/vnpay/callback").permitAll()
+
                                                 // All other requests need authentication
                                                 .anyRequest().authenticated())
                                 .oauth2ResourceServer(oauth2 -> oauth2
