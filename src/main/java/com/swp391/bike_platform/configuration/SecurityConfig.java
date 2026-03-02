@@ -110,6 +110,13 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.DELETE, "/wishlist/**")
                                                 .authenticated()
 
+                                                // Locations - Public (dropdown tỉnh/xã)
+                                                .requestMatchers(HttpMethod.GET, "/locations/**").permitAll()
+
+                                                // Addresses - Authenticated (user manages own addresses)
+                                                .requestMatchers("/users/*/addresses", "/users/*/addresses/**")
+                                                .authenticated()
+
                                                 // All other requests need authentication
                                                 .anyRequest().authenticated())
                                 .oauth2ResourceServer(oauth2 -> oauth2

@@ -3673,7 +3673,6 @@ INSERT INTO Communes (commune_code, name, name_with_type, type, province_code) V
 CREATE TABLE UserAddresses (
     address_id BIGINT IDENTITY(1,1) PRIMARY KEY,
     user_id BIGINT NOT NULL,
-    province_code VARCHAR(10) NOT NULL,
     commune_code VARCHAR(10) NOT NULL,
     street_address NVARCHAR(255),
     full_address NVARCHAR(500),
@@ -3681,7 +3680,6 @@ CREATE TABLE UserAddresses (
     created_at DATETIME2 DEFAULT GETDATE(),
     updated_at DATETIME2 DEFAULT GETDATE(),
     CONSTRAINT FK_UserAddresses_Users FOREIGN KEY (user_id) REFERENCES Users(user_id),
-    CONSTRAINT FK_UserAddresses_Provinces FOREIGN KEY (province_code) REFERENCES Provinces(province_code),
     CONSTRAINT FK_UserAddresses_Communes FOREIGN KEY (commune_code) REFERENCES Communes(commune_code)
 );
 
@@ -3706,3 +3704,78 @@ CREATE TABLE Orders (
     CONSTRAINT FK_Orders_Buyers FOREIGN KEY (buyer_id) REFERENCES Users(user_id),
     CONSTRAINT FK_Orders_Addresses FOREIGN KEY (shipping_address_id) REFERENCES UserAddresses(address_id)
 );
+
+-- 11. Create Wallets Table (Ví điện tử)
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Wallets' AND xtype='U')
+BEGIN
+    CREATE TABLE Wallets (
+        wallet_id BIGINT IDENTITY(1,1) PRIMARY KEY,
+
+        -- Foreign Key: 1 user = 1 ví
+        user_id BIGINT NOT NULL UNIQUE,
+
+        -- Số dư ví
+        balance DECIMAL(18,2) NOT NULL DEFAULT 0,
+
+        -- Timestamps
+        created_at DATETIME2 DEFAULT GETDATE(),
+        updated_at DATETIME2 DEFAULT GETDATE(),
+
+        -- Foreign Key Constraint
+        CONSTRAINT FK_Wallets_Users FOREIGN KEY (user_id) REFERENCES Users(user_id)
+    );
+    PRINT 'Table Wallets created successfully.';
+END
+ELSE
+BEGIN
+    PRINT 'Table Wallets already exists.';
+END
+GO
+
+-- 12. Create Transactions Table (Lịch sử giao dịch)
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Transactions' AND xtype='U')
+BEGIN
+    CREATE TABLE Transactions (
+        transaction_id BIGINT IDENTITY(1,1) PRIMARY KEY,
+
+        -- Foreign Keys
+        wallet_id BIGINT NOT NULL,
+        user_id BIGINT NOT NULL,
+        post_id BIGINT NULL,  -- Chỉ có giá trị khi DEPOSIT/PURCHASE/REFUND
+
+        -- Loại giao dịch: TOP_UP (nạp ví), DEPOSIT (đặt cọc), PURCHASE (mua), REFUND (hoàn)
+        transaction_type VARCHAR(20) NOT NULL
+            CHECK (transaction_type IN ('TOP_UP', 'DEPOSIT', 'PURCHASE', 'REFUND')),
+
+        -- Số tiền giao dịch
+        amount DECIMAL(18,2) NOT NULL,
+
+        -- Trạng thái: PENDING (chờ), SUCCESS (thành công), FAILED (thất bại)
+        status VARCHAR(20) NOT NULL DEFAULT 'PENDING'
+            CHECK (status IN ('PENDING', 'SUCCESS', 'FAILED')),
+
+        -- Thông tin VNPay (chỉ dùng khi TOP_UP)
+        vnp_txn_ref VARCHAR(100) UNIQUE,        -- Mã GD gửi VNPay
+        vnp_transaction_no VARCHAR(100),         -- Mã GD phía VNPay trả về
+        vnp_bank_code VARCHAR(50),               -- Ngân hàng thanh toán
+        vnp_response_code VARCHAR(10),           -- Mã phản hồi (00 = thành công)
+
+        -- Mô tả giao dịch
+        description NVARCHAR(500),
+
+        -- Timestamps
+        created_at DATETIME2 DEFAULT GETDATE(),
+        updated_at DATETIME2 DEFAULT GETDATE(),
+
+        -- Foreign Key Constraints
+        CONSTRAINT FK_Transactions_Wallets FOREIGN KEY (wallet_id) REFERENCES Wallets(wallet_id),
+        CONSTRAINT FK_Transactions_Users FOREIGN KEY (user_id) REFERENCES Users(user_id),
+        CONSTRAINT FK_Transactions_Posts FOREIGN KEY (post_id) REFERENCES BicyclePosts(post_id)
+    );
+    PRINT 'Table Transactions created successfully.';
+END
+ELSE
+BEGIN
+    PRINT 'Table Transactions already exists.';
+END
+GO

@@ -33,7 +33,7 @@ public class EmailService {
      */
     @Async
     public void sendVerificationApprovedEmail(User user) {
-        String subject = "Tài khoản của bạn đã được xác minh - Ba Sáu Cycle";
+        String subject = "Tài khoản của bạn đã được xác minh - BaSauCycle";
         String body = """
                 <p>Xin chào <strong>%s</strong>,</p>
                 <p>Chúng tôi vui mừng thông báo rằng tài khoản của bạn trên <strong>Ba Sáu Cycle</strong> đã được xác minh thành công!</p>

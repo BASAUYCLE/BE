@@ -66,6 +66,9 @@ public class AdminUserController {
         } else {
             emailService.sendVerificationRejectedEmail(user, request.getReason());
             log.info("Verification rejected email sent to: {}", user.getEmail());
+            // Xóa tài khoản bị reject để user có thể đăng ký lại
+            userService.deleteUser(user.getUserId());
+            log.info("Rejected user {} deleted from database", user.getEmail());
         }
 
         return ApiResponse.<UserResponse>builder()
