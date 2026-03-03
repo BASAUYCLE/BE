@@ -36,7 +36,7 @@ public class VnPayService {
         params.put("vnp_IpAddr", ipAddress);
 
         // Create date
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+07:00"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
         params.put("vnp_CreateDate", formatter.format(cal.getTime()));
 
