@@ -170,7 +170,8 @@ public class OrderService {
         Order order = findOrderById(orderId);
         validateSeller(order, sellerId);
 
-        if (!OrderStatus.PAID.name().equals(order.getOrderStatus())) {
+        if (!OrderStatus.PAID.name().equals(order.getOrderStatus())
+                && !OrderStatus.DEPOSITED.name().equals(order.getOrderStatus())) {
             throw new AppException(ErrorCode.INVALID_ORDER_STATUS);
         }
 
@@ -225,10 +226,9 @@ public class OrderService {
 
         String status = order.getOrderStatus();
 
-        // Only allow cancel for DEPOSITED, PAID, SHIPPING
+        // Only allow cancel for DEPOSITED, PAID (NOT SHIPPING)
         if (!OrderStatus.DEPOSITED.name().equals(status)
-                && !OrderStatus.PAID.name().equals(status)
-                && !OrderStatus.SHIPPING.name().equals(status)) {
+                && !OrderStatus.PAID.name().equals(status)) {
             throw new AppException(ErrorCode.INVALID_ORDER_STATUS);
         }
 
