@@ -126,6 +126,9 @@ public class SecurityConfig {
                                                 // VNPay callback - Public (browser redirect)
                                                 .requestMatchers(HttpMethod.GET, "/payment/vnpay/callback").permitAll()
 
+                                                // Orders - Authenticated (buyer/seller manage orders)
+                                                .requestMatchers("/orders", "/orders/**").authenticated()
+
                                                 // All other requests need authentication
                                                 .anyRequest().authenticated())
                                 .oauth2ResourceServer(oauth2 -> oauth2
