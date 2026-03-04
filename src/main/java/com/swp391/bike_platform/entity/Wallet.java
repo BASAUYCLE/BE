@@ -24,7 +24,7 @@ public class Wallet {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    @Column(name = "balance", nullable = false)
+    @Column(name = "balance", nullable = false, columnDefinition = "DECIMAL(18,2)")
     @Builder.Default
     private BigDecimal balance = BigDecimal.ZERO;
 
