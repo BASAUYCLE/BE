@@ -4,5 +4,6 @@ public enum TransactionType {
     TOP_UP,
     DEPOSIT,
     PURCHASE,
-    REFUND
+    REFUND,
+    POSTING_FEE
 }

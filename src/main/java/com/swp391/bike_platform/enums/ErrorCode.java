@@ -58,6 +58,15 @@ public enum ErrorCode {
     VNPAY_INVALID_CHECKSUM(1049, "VNPay checksum verification failed", HttpStatus.BAD_REQUEST),
     VNPAY_PAYMENT_FAILED(1050, "VNPay payment failed", HttpStatus.BAD_REQUEST),
     TOP_UP_MIN_AMOUNT(1051, "Minimum top-up amount is 10,000 VND", HttpStatus.BAD_REQUEST),
+    CONFIG_NOT_FOUND(1052, "Configuration not found", HttpStatus.NOT_FOUND),
+    INSUFFICIENT_BALANCE_FOR_POST(1053, "Insufficient balance to pay posting fee", HttpStatus.BAD_REQUEST),
+    ORDER_NOT_FOUND(1054, "Order not found", HttpStatus.NOT_FOUND),
+    CANNOT_ORDER_OWN_POST(1055, "Cannot order your own post", HttpStatus.BAD_REQUEST),
+    POST_NOT_AVAILABLE_FOR_ORDER(1056, "Post is not available for ordering", HttpStatus.BAD_REQUEST),
+    INVALID_ORDER_STATUS(1057, "Invalid order status for this action", HttpStatus.BAD_REQUEST),
+    NOT_ORDER_BUYER(1058, "You are not the buyer of this order", HttpStatus.FORBIDDEN),
+    NOT_ORDER_SELLER(1059, "You are not the seller of this order", HttpStatus.FORBIDDEN),
+    ORDER_ALREADY_EXISTS(1060, "An active order already exists for this post", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatus statusCode) {

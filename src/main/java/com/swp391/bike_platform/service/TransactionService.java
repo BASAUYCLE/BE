@@ -1,6 +1,8 @@
 package com.swp391.bike_platform.service;
 
+import com.swp391.bike_platform.entity.BicyclePost;
 import com.swp391.bike_platform.entity.Transaction;
+import com.swp391.bike_platform.entity.User;
 import com.swp391.bike_platform.entity.Wallet;
 import com.swp391.bike_platform.enums.ErrorCode;
 import com.swp391.bike_platform.enums.TransactionStatus;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -50,7 +53,7 @@ public class TransactionService {
                 .amount(amount)
                 .status(TransactionStatus.PENDING.name())
                 .vnpTxnRef(txnRef)
-                .description("Nap tien vi - " + amount.toPlainString() + " VND")
+                .description("+" + formatAmount(amount) + " VND - Nạp tiền ví")
                 .build();
         transactionRepository.save(transaction);
 
@@ -115,6 +118,34 @@ public class TransactionService {
         Transaction t = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
         return toResponse(t);
+    }
+
+    /**
+     * Create a transaction for order-related operations (deposit, purchase, refund,
+     * posting fee)
+     */
+    @Transactional
+    public void createOrderTransaction(Wallet wallet, User user, BicyclePost post,
+            TransactionType type, BigDecimal amount,
+            String description) {
+        Transaction transaction = Transaction.builder()
+                .wallet(wallet)
+                .user(user)
+                .post(post)
+                .transactionType(type.name())
+                .amount(amount)
+                .status(TransactionStatus.SUCCESS.name())
+                .description(description)
+                .build();
+        transactionRepository.save(transaction);
+    }
+
+    /**
+     * Format amount with comma separators (e.g. 850,000)
+     */
+    public static String formatAmount(BigDecimal amount) {
+        DecimalFormat df = new DecimalFormat("#,###");
+        return df.format(amount);
     }
 
     private TransactionResponse toResponse(Transaction t) {
