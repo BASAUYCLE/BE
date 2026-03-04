@@ -4,6 +4,7 @@ public enum PostStatus {
     PENDING,
     ADMIN_APPROVED,
     AVAILABLE,
+    PROCESSING,
     DEPOSITED,
     SOLD,
     REJECTED,

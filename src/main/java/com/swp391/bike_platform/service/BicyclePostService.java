@@ -1,12 +1,9 @@
 package com.swp391.bike_platform.service;
 
-import com.swp391.bike_platform.entity.BicycleImage;
-import com.swp391.bike_platform.entity.BicyclePost;
-import com.swp391.bike_platform.entity.Brand;
-import com.swp391.bike_platform.entity.Category;
-import com.swp391.bike_platform.entity.User;
+import com.swp391.bike_platform.entity.*;
 import com.swp391.bike_platform.enums.ErrorCode;
 import com.swp391.bike_platform.enums.PostStatus;
+import com.swp391.bike_platform.enums.TransactionType;
 import com.swp391.bike_platform.exception.AppException;
 import com.swp391.bike_platform.repository.BicyclePostRepository;
 import com.swp391.bike_platform.repository.BrandRepository;
@@ -34,10 +31,14 @@ public class BicyclePostService {
     private final UserRepository userRepository;
     private final BrandRepository brandRepository;
     private final CategoryRepository categoryRepository;
+    private final WalletService walletService;
+    private final TransactionService transactionService;
+    private final SystemConfigService systemConfigService;
 
     // Statuses visible to public users (Mercari style)
     private static final List<String> PUBLIC_STATUSES = Arrays.asList(
             PostStatus.AVAILABLE.name(),
+            PostStatus.PROCESSING.name(),
             PostStatus.DEPOSITED.name(),
             PostStatus.SOLD.name());
 
@@ -50,6 +51,9 @@ public class BicyclePostService {
         // Get related entities
         User seller = userRepository.findById(request.getSellerId())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // Deduct posting fee
+        deductPostingFee(seller);
 
         Brand brand = brandRepository.findById(request.getBrandId())
                 .orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_EXISTED));
@@ -280,6 +284,9 @@ public class BicyclePostService {
         // Validate all fields are complete before submitting
         validateDraftComplete(post);
 
+        // Deduct posting fee
+        deductPostingFee(post.getSeller());
+
         // Transition to PENDING
         post.setPostStatus(PostStatus.PENDING.name());
         BicyclePost savedPost = bicyclePostRepository.save(post);
@@ -321,6 +328,28 @@ public class BicyclePostService {
     }
 
     // Helper methods
+
+    /**
+     * Deduct posting fee from seller wallet and create POSTING_FEE transaction
+     */
+    private void deductPostingFee(User seller) {
+        BigDecimal postingFee = systemConfigService.getPostingFee();
+        Wallet sellerWallet = walletService.getOrCreateWallet(seller.getUserId());
+
+        if (sellerWallet.getBalance().compareTo(postingFee) < 0) {
+            throw new AppException(ErrorCode.INSUFFICIENT_BALANCE_FOR_POST);
+        }
+
+        walletService.deductBalance(sellerWallet.getWalletId(), postingFee);
+
+        transactionService.createOrderTransaction(
+                sellerWallet, seller, null,
+                TransactionType.POSTING_FEE, postingFee,
+                "-" + TransactionService.formatAmount(postingFee) + " VND - Phí đăng bài");
+
+        log.info("Posting fee {} deducted from user {}", postingFee, seller.getUserId());
+    }
+
     private BicyclePost findPostById(Long postId) {
         return bicyclePostRepository.findById(postId)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_EXISTED));
