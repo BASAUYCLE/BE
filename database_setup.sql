@@ -3779,3 +3779,85 @@ BEGIN
     PRINT 'Table Transactions already exists.';
 END
 GO
+
+-- =============================================
+-- SystemConfig Table
+-- =============================================
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='SystemConfig' AND xtype='U')
+BEGIN
+    CREATE TABLE SystemConfig (
+        config_key VARCHAR(50) PRIMARY KEY,
+        config_value VARCHAR(200) NOT NULL,
+        description NVARCHAR(500),
+        updated_at DATETIME2 DEFAULT GETDATE()
+    );
+    PRINT 'Table SystemConfig created successfully.';
+END
+ELSE
+BEGIN
+    PRINT 'Table SystemConfig already exists.';
+END
+GO
+
+-- Seed SystemConfig data
+IF EXISTS (SELECT * FROM sysobjects WHERE name='SystemConfig' AND xtype='U')
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM SystemConfig WHERE config_key = 'DEPOSIT_RATE')
+        INSERT INTO SystemConfig (config_key, config_value, description, updated_at)
+        VALUES ('DEPOSIT_RATE', '10', N'Tỷ lệ đặt cọc (%)', GETDATE());
+
+    IF NOT EXISTS (SELECT 1 FROM SystemConfig WHERE config_key = 'POSTING_FEE')
+        INSERT INTO SystemConfig (config_key, config_value, description, updated_at)
+        VALUES ('POSTING_FEE', '50000', N'Phí đăng bài (VND)', GETDATE());
+
+    IF NOT EXISTS (SELECT 1 FROM SystemConfig WHERE config_key = 'AUTO_CONFIRM_DAYS')
+        INSERT INTO SystemConfig (config_key, config_value, description, updated_at)
+        VALUES ('AUTO_CONFIRM_DAYS', '7', N'Tự động xác nhận sau X ngày', GETDATE());
+
+    PRINT 'SystemConfig seed data inserted.';
+END
+GO
+
+-- =============================================
+-- Orders Table
+-- =============================================
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Orders' AND xtype='U')
+BEGIN
+    CREATE TABLE Orders (
+        order_id BIGINT IDENTITY(1,1) PRIMARY KEY,
+
+        -- Foreign Keys
+        post_id BIGINT NOT NULL,
+        buyer_id BIGINT NOT NULL,
+        address_id BIGINT,
+
+        -- Pricing
+        total_price DECIMAL(18,2) NOT NULL,
+        deposit_amount DECIMAL(18,2),
+
+        -- Status
+        order_status VARCHAR(20) NOT NULL DEFAULT 'DEPOSITED'
+            CHECK (order_status IN ('DEPOSITED', 'PAID', 'SHIPPING', 'COMPLETED', 'CANCELLED')),
+
+        -- Shipping info
+        shipping_method NVARCHAR(100),
+        shipping_tracking_number VARCHAR(200),
+        proof_image VARCHAR(500),
+        shipped_at DATETIME2,
+
+        -- Timestamps
+        created_at DATETIME2 DEFAULT GETDATE(),
+        updated_at DATETIME2 DEFAULT GETDATE(),
+
+        -- Foreign Key Constraints
+        CONSTRAINT FK_Orders_Posts FOREIGN KEY (post_id) REFERENCES BicyclePosts(post_id),
+        CONSTRAINT FK_Orders_Buyers FOREIGN KEY (buyer_id) REFERENCES Users(user_id),
+        CONSTRAINT FK_Orders_Addresses FOREIGN KEY (address_id) REFERENCES UserAddresses(address_id)
+    );
+    PRINT 'Table Orders created successfully.';
+END
+ELSE
+BEGIN
+    PRINT 'Table Orders already exists.';
+END
+GO
