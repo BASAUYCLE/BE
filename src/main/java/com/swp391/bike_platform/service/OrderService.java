@@ -133,34 +133,6 @@ public class OrderService {
         return toResponse(order);
     }
 
-    // ─────────────────── PAY REMAINING ───────────────────
-
-    @Transactional
-    public OrderResponse payRemaining(Long orderId, Long buyerId) {
-        Order order = findOrderById(orderId);
-        validateBuyer(order, buyerId);
-
-        if (!OrderStatus.DEPOSITED.name().equals(order.getOrderStatus())) {
-            throw new AppException(ErrorCode.INVALID_ORDER_STATUS);
-        }
-
-        BigDecimal remaining = order.getTotalPrice().subtract(order.getDepositAmount());
-        Wallet buyerWallet = walletService.getOrCreateWallet(buyerId);
-        walletService.deductBalance(buyerWallet.getWalletId(), remaining);
-
-        // Create transaction
-        transactionService.createOrderTransaction(
-                buyerWallet, buyerWallet.getUser(), order.getPost(),
-                TransactionType.PURCHASE, remaining,
-                formatDescription("-", remaining, "Thanh toán đơn #" + orderId));
-
-        order.setOrderStatus(OrderStatus.PAID.name());
-        orderRepository.save(order);
-
-        log.info("Order #{} fully paid by buyer {}", orderId, buyerId);
-        return toResponse(order);
-    }
-
     // ─────────────────── CONFIRM SHIPPING ───────────────────
 
     @Transactional
@@ -232,37 +204,12 @@ public class OrderService {
             throw new AppException(ErrorCode.INVALID_ORDER_STATUS);
         }
 
-        if (isBuyer) {
-            // Buyer cancel — loses deposit, refund remaining if PAID or SHIPPING
-            BigDecimal paidTotal = OrderStatus.DEPOSITED.name().equals(status)
-                    ? order.getDepositAmount()
-                    : order.getTotalPrice();
-            BigDecimal refundAmount = paidTotal.subtract(order.getDepositAmount());
-
-            if (refundAmount.compareTo(BigDecimal.ZERO) > 0) {
-                Wallet buyerWallet = walletService.getOrCreateWallet(buyerId);
-                walletService.addBalance(buyerWallet.getWalletId(), refundAmount);
-
-                transactionService.createOrderTransaction(
-                        buyerWallet, buyerWallet.getUser(), order.getPost(),
-                        TransactionType.REFUND, refundAmount,
-                        formatDescription("+", refundAmount, "Hoàn tiền đơn #" + orderId + " (trừ cọc)"));
-            }
-
-            log.info("Order #{} cancelled by buyer {} — deposit {} lost", orderId, userId, order.getDepositAmount());
-
-        } else {
-            // Seller cancel — full refund to buyer (deposit + remaining)
+        if (OrderStatus.PAID.name().equals(status)) {
+            // Trường hợp 1: Bank Full (Đơn đã trả 100% - PAID)
+            // Buyer/Seller hủy -> Hoàn 100% tiền lại vào ví Buyer. Seller không nhận được
+            // gì.
+            BigDecimal refundAmount = order.getTotalPrice();
             Wallet buyerWallet = walletService.getOrCreateWallet(buyerId);
-            BigDecimal refundAmount;
-
-            if (OrderStatus.DEPOSITED.name().equals(status)) {
-                refundAmount = order.getDepositAmount();
-            } else {
-                // PAID or SHIPPING — refund total price
-                refundAmount = order.getTotalPrice();
-            }
-
             walletService.addBalance(buyerWallet.getWalletId(), refundAmount);
 
             transactionService.createOrderTransaction(
@@ -270,7 +217,38 @@ public class OrderService {
                     TransactionType.REFUND, refundAmount,
                     formatDescription("+", refundAmount, "Hoàn tiền đơn #" + orderId));
 
-            log.info("Order #{} cancelled by seller {} — refunded {} to buyer", orderId, userId, refundAmount);
+            log.info("Order #{} cancelled (PAID) by {} {} — refunded full {} to buyer", orderId,
+                    isBuyer ? "buyer" : "seller", userId, refundAmount);
+
+        } else if (OrderStatus.DEPOSITED.name().equals(status)) {
+            // Trường hợp 2: Đặt cọc (Đơn chỉ cọc - DEPOSITED)
+            BigDecimal depositAmount = order.getDepositAmount();
+
+            if (isBuyer) {
+                // Buyer hủy: Buyer mất cọc. Tiền cọc được chuyển thẳng vào ví Seller.
+                Wallet sellerWallet = walletService.getOrCreateWallet(sellerId);
+                walletService.addBalance(sellerWallet.getWalletId(), depositAmount);
+
+                transactionService.createOrderTransaction(
+                        sellerWallet, sellerWallet.getUser(), order.getPost(),
+                        TransactionType.REFUND, depositAmount,
+                        formatDescription("+", depositAmount, "Nhận tiền cọc đơn #" + orderId + " (buyer hủy)"));
+
+                log.info("Order #{} cancelled (DEPOSITED) by buyer {} — deposit {} transferred to seller", orderId,
+                        userId, depositAmount);
+            } else {
+                // Seller hủy: Hoàn lại 100% tiền cọc vào ví Buyer. Seller không nhận được gì.
+                Wallet buyerWallet = walletService.getOrCreateWallet(buyerId);
+                walletService.addBalance(buyerWallet.getWalletId(), depositAmount);
+
+                transactionService.createOrderTransaction(
+                        buyerWallet, buyerWallet.getUser(), order.getPost(),
+                        TransactionType.REFUND, depositAmount,
+                        formatDescription("+", depositAmount, "Hoàn tiền cọc đơn #" + orderId + " (seller hủy)"));
+
+                log.info("Order #{} cancelled (DEPOSITED) by seller {} — deposit {} refunded to buyer", orderId, userId,
+                        depositAmount);
+            }
         }
 
         order.setOrderStatus(OrderStatus.CANCELLED.name());
@@ -325,15 +303,22 @@ public class OrderService {
     // ─────────────────── HELPERS ───────────────────
 
     private void completeOrder(Order order) {
-        // Transfer 100% totalPrice to seller wallet
+        // Transfer money to seller wallet based on payment type
+        // PAID (payFull) → transfer totalPrice; DEPOSITED (COD) → transfer
+        // depositAmount only
         Long sellerId = order.getPost().getSeller().getUserId();
         Wallet sellerWallet = walletService.getOrCreateWallet(sellerId);
-        walletService.addBalance(sellerWallet.getWalletId(), order.getTotalPrice());
+
+        BigDecimal sellerAmount = OrderStatus.PAID.name().equals(order.getOrderStatus())
+                ? order.getTotalPrice()
+                : order.getDepositAmount();
+
+        walletService.addBalance(sellerWallet.getWalletId(), sellerAmount);
 
         transactionService.createOrderTransaction(
                 sellerWallet, sellerWallet.getUser(), order.getPost(),
-                TransactionType.PURCHASE, order.getTotalPrice(),
-                formatDescription("+", order.getTotalPrice(),
+                TransactionType.PURCHASE, sellerAmount,
+                formatDescription("+", sellerAmount,
                         "Nhận tiền bán đơn #" + order.getOrderId()));
 
         order.setOrderStatus(OrderStatus.COMPLETED.name());
