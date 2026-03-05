@@ -170,6 +170,15 @@ public class BicyclePostService {
                 .collect(Collectors.toList());
     }
 
+    public List<BicyclePostResponse> getPostsByKeyword(String keyword) {
+        List<BicyclePost> posts = bicyclePostRepository.findByBicycleNameContainingIgnoreCaseAndPostStatusIn(keyword,
+                PUBLIC_STATUSES);
+
+        return posts.stream()
+                .map(this::toPostResponse)
+                .collect(Collectors.toList());
+    }
+
     public BicyclePostResponse updatePost(Long postId, Long userId, BicyclePostUpdateRequest request) {
         BicyclePost post = findPostById(postId);
 

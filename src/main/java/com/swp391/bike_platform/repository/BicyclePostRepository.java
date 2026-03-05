@@ -52,4 +52,7 @@ public interface BicyclePostRepository extends JpaRepository<BicyclePost, Long> 
 
         List<BicyclePost> findByPriceBetweenAndPostStatusIn(BigDecimal minPrice, BigDecimal maxPrice,
                         java.util.Collection<String> postStatuses);
+
+        List<BicyclePost> findByBicycleNameContainingIgnoreCaseAndPostStatusIn(String keyword,
+                        java.util.Collection<String> postStatuses);
 }

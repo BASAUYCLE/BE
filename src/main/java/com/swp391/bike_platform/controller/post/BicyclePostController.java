@@ -89,11 +89,18 @@ public class BicyclePostController {
 
     @GetMapping("/search")
     public List<BicyclePostResponse> searchPosts(
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice) {
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            return bicyclePostService.getPostsByKeyword(keyword.trim());
+        }
+
         if (minPrice != null && maxPrice != null) {
             return bicyclePostService.getPostsByPriceRange(minPrice, maxPrice);
         }
+
         return bicyclePostService.getAllPosts();
     }
 
