@@ -181,6 +181,34 @@ public class OrderService {
         return toResponse(order);
     }
 
+    // ─────────────────── PAY REMAINING ───────────────────
+
+    @Transactional
+    public OrderResponse payRemaining(Long orderId, Long buyerId) {
+        Order order = findOrderById(orderId);
+        validateBuyer(order, buyerId);
+
+        if (!OrderStatus.DEPOSITED.name().equals(order.getOrderStatus())) {
+            throw new AppException(ErrorCode.INVALID_ORDER_STATUS);
+        }
+
+        BigDecimal remaining = order.getTotalPrice().subtract(order.getDepositAmount());
+        Wallet buyerWallet = walletService.getOrCreateWallet(buyerId);
+        walletService.deductBalance(buyerWallet.getWalletId(), remaining);
+
+        // Create transaction
+        transactionService.createOrderTransaction(
+                buyerWallet, buyerWallet.getUser(), order.getPost(),
+                TransactionType.PAY_REMAINING, remaining,
+                formatDescription("-", remaining, "Thanh toán phần còn lại đơn #" + orderId));
+
+        order.setOrderStatus(OrderStatus.PAID.name());
+        orderRepository.save(order);
+
+        log.info("Order #{} fully paid by buyer {}", orderId, buyerId);
+        return toResponse(order);
+    }
+
     // ─────────────────── CANCEL ORDER ───────────────────
 
     @Transactional

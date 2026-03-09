@@ -3743,9 +3743,9 @@ BEGIN
         user_id BIGINT NOT NULL,
         post_id BIGINT NULL,  -- Chỉ có giá trị khi DEPOSIT/PURCHASE/REFUND
 
-        -- Loại giao dịch: TOP_UP (nạp ví), DEPOSIT (đặt cọc), PURCHASE (mua), REFUND (hoàn)
+        -- Loại giao dịch: TOP_UP (nạp ví), DEPOSIT (đặt cọc), PURCHASE (mua), REFUND (hoàn), POSTING_FEE, PAY_REMAINING
         transaction_type VARCHAR(20) NOT NULL
-            CHECK (transaction_type IN ('TOP_UP', 'DEPOSIT', 'PURCHASE', 'REFUND')),
+            CHECK (transaction_type IN ('TOP_UP', 'DEPOSIT', 'PURCHASE', 'REFUND', 'POSTING_FEE', 'PAY_REMAINING')),
 
         -- Số tiền giao dịch
         amount DECIMAL(18,2) NOT NULL,

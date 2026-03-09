@@ -52,10 +52,10 @@ BEGIN
 END
 GO
 
--- 2b. Thêm lại với POSTING_FEE
+-- 2b. Thêm lại với POSTING_FEE và PAY_REMAINING
 ALTER TABLE Transactions ADD CONSTRAINT CK_Transactions_Type 
-CHECK (transaction_type IN ('TOP_UP', 'DEPOSIT', 'PURCHASE', 'REFUND', 'POSTING_FEE'));
-PRINT 'Added constraint CK_Transactions_Type with POSTING_FEE';
+CHECK (transaction_type IN ('TOP_UP', 'DEPOSIT', 'PURCHASE', 'REFUND', 'POSTING_FEE', 'PAY_REMAINING'));
+PRINT 'Added constraint CK_Transactions_Type with POSTING_FEE and PAY_REMAINING';
 GO
 
 -- 2c. Xóa UNIQUE constraint trên vnp_txn_ref (tự tìm tên)

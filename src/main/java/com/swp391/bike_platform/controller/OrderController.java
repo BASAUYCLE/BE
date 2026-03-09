@@ -69,6 +69,19 @@ public class OrderController {
         }
 
         /**
+         * PUT /orders/{id}/pay — Pay remaining amount (DEPOSITED → PAID)
+         */
+        @PutMapping("/{id}/pay")
+        public ApiResponse<OrderResponse> payRemaining(@AuthenticationPrincipal Jwt jwt,
+                        @PathVariable Long id) {
+                User user = userService.getUserEntityByEmail(jwt.getSubject());
+                return ApiResponse.<OrderResponse>builder()
+                                .result(orderService.payRemaining(id, user.getUserId()))
+                                .message("Payment completed successfully")
+                                .build();
+        }
+
+        /**
          * PUT /orders/{id}/shipping — Confirm shipping with proof image (PAID →
          * SHIPPING)
          */

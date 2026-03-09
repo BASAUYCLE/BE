@@ -5,5 +5,6 @@ public enum TransactionType {
     DEPOSIT,
     PURCHASE,
     REFUND,
-    POSTING_FEE
+    POSTING_FEE,
+    PAY_REMAINING
 }
