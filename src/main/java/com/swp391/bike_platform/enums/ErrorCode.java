@@ -67,6 +67,10 @@ public enum ErrorCode {
     NOT_ORDER_BUYER(1058, "You are not the buyer of this order", HttpStatus.FORBIDDEN),
     NOT_ORDER_SELLER(1059, "You are not the seller of this order", HttpStatus.FORBIDDEN),
     ORDER_ALREADY_EXISTS(1060, "An active order already exists for this post", HttpStatus.BAD_REQUEST),
+    FEEDBACK_ALREADY_EXISTS(1061, "Feedback already exists for this order", HttpStatus.BAD_REQUEST),
+    FEEDBACK_NOT_FOUND(1062, "Feedback not found for this order", HttpStatus.NOT_FOUND),
+    ORDER_NOT_COMPLETED(1063, "Order must be completed before leaving feedback", HttpStatus.BAD_REQUEST),
+    INVALID_RATING(1064, "Rating must be between 1 and 5", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatus statusCode) {
