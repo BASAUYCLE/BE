@@ -3,9 +3,11 @@ package com.swp391.bike_platform.service;
 import com.swp391.bike_platform.entity.BicyclePost;
 import com.swp391.bike_platform.entity.InspectionReport;
 import com.swp391.bike_platform.entity.User;
+import com.swp391.bike_platform.entity.Wallet;
 import com.swp391.bike_platform.enums.ErrorCode;
 import com.swp391.bike_platform.enums.InspectionResult;
 import com.swp391.bike_platform.enums.PostStatus;
+import com.swp391.bike_platform.enums.TransactionType;
 import com.swp391.bike_platform.exception.AppException;
 import com.swp391.bike_platform.repository.BicyclePostRepository;
 import com.swp391.bike_platform.repository.InspectionReportRepository;
@@ -19,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,6 +33,9 @@ public class InspectionService {
     private final BicyclePostRepository bicyclePostRepository;
     private final InspectionReportRepository inspectionReportRepository;
     private final UserRepository userRepository;
+    private final WalletService walletService;
+    private final TransactionService transactionService;
+    private final SystemConfigService systemConfigService;
 
     /**
      * Lấy danh sách bài đăng chờ Inspector kiểm định (status = ADMIN_APPROVED)
@@ -86,9 +92,29 @@ public class InspectionService {
 
         InspectionReport savedReport = inspectionReportRepository.save(report);
 
+        // Hoàn phí đăng bài nếu Inspector đánh FAIL
+        if (result == InspectionResult.FAIL) {
+            refundPostingFee(post.getSeller(), post);
+        }
+
         log.info("Inspection submitted for post {}: result={}, newStatus={}", postId, result, newPostStatus);
 
         return toReportResponse(savedReport, newPostStatus);
+    }
+
+    /**
+     * Hoàn phí đăng bài vào ví người bán và tạo transaction REFUND
+     */
+    private void refundPostingFee(User seller, BicyclePost post) {
+        BigDecimal postingFee = systemConfigService.getPostingFee();
+        Wallet sellerWallet = walletService.getOrCreateWallet(seller.getUserId());
+
+        walletService.addBalance(sellerWallet.getWalletId(), postingFee);
+
+        transactionService.createOrderTransaction(
+                sellerWallet, seller, post,
+                TransactionType.REFUND, postingFee,
+                "+" + TransactionService.formatAmount(postingFee) + " VND - Hoàn phí đăng bài (kiểm định không đạt)");
     }
 
     private InspectionReportResponse toReportResponse(InspectionReport report, String postStatus) {

@@ -2,8 +2,11 @@ package com.swp391.bike_platform.service;
 
 import com.swp391.bike_platform.entity.BicycleImage;
 import com.swp391.bike_platform.entity.BicyclePost;
+import com.swp391.bike_platform.entity.User;
+import com.swp391.bike_platform.entity.Wallet;
 import com.swp391.bike_platform.enums.ErrorCode;
 import com.swp391.bike_platform.enums.PostStatus;
+import com.swp391.bike_platform.enums.TransactionType;
 import com.swp391.bike_platform.exception.AppException;
 import com.swp391.bike_platform.repository.BicyclePostRepository;
 import com.swp391.bike_platform.response.BicycleImageResponse;
@@ -12,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,6 +25,9 @@ import java.util.stream.Collectors;
 public class AdminPostService {
 
     private final BicyclePostRepository bicyclePostRepository;
+    private final WalletService walletService;
+    private final TransactionService transactionService;
+    private final SystemConfigService systemConfigService;
 
     /**
      * Lấy danh sách bài đăng đang chờ Admin duyệt (status = PENDING)
@@ -80,9 +87,28 @@ public class AdminPostService {
 
         post.setPostStatus(PostStatus.REJECTED.name());
         BicyclePost savedPost = bicyclePostRepository.save(post);
-        log.info("Post {} rejected by Admin", postId);
+
+        // Hoàn phí đăng bài cho người bán
+        refundPostingFee(post.getSeller(), post);
+
+        log.info("Post {} rejected by Admin, posting fee refunded to seller {}", postId, post.getSeller().getUserId());
 
         return toPostResponse(savedPost);
+    }
+
+    /**
+     * Hoàn phí đăng bài vào ví người bán và tạo transaction REFUND
+     */
+    private void refundPostingFee(User seller, BicyclePost post) {
+        BigDecimal postingFee = systemConfigService.getPostingFee();
+        Wallet sellerWallet = walletService.getOrCreateWallet(seller.getUserId());
+
+        walletService.addBalance(sellerWallet.getWalletId(), postingFee);
+
+        transactionService.createOrderTransaction(
+                sellerWallet, seller, post,
+                TransactionType.REFUND, postingFee,
+                "+" + TransactionService.formatAmount(postingFee) + " VND - Hoàn phí đăng bài (bài bị từ chối)");
     }
 
     /**
