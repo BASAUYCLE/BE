@@ -1,0 +1,166 @@
+# Dispute Flow — API Spec cho Frontend (Simplified)
+
+## 1. Luồng Tổng Quan
+
+```mermaid
+stateDiagram-v2
+    [*] --> DELIVERED : Buyer xác nhận nhận hàng
+    DELIVERED --> COMPLETED : Quá 3 ngày không khiếu nại \nhoặc đã đánh giá → Tiền về Seller
+    DELIVERED --> OPEN : Buyer mở Dispute \n(Trong vòng 3 ngày & chưa đánh giá)
+
+    OPEN --> REVIEWING : Inspector ghi chú
+    REVIEWING --> APPROVED : Admin duyệt \n(Chấp nhận trả xe)
+    REVIEWING --> REJECTED : Admin từ chối \n(Tiền về Seller)
+
+    APPROVED --> RETURN_SHIPPED : Buyer tự vận chuyển & upload mã vận đơn
+    APPROVED --> REJECTED : Quá thời hạn không ship lại \n(Tiền về Seller)
+
+    RETURN_SHIPPED --> RESOLVED : Seller xác nhận nhận xe \n(Hoàn tiền cho Buyer)
+    RETURN_SHIPPED --> RESOLVED : Seller im lặng > 7 ngày \n(Auto hoàn tiền Buyer)
+```
+
+> **Những sự thay đổi so với quy trình trước:**
+> 1. **Khung thời gian giới hạn (3 ngày):** Người mua chỉ được mở khiếu nại trong vòng **tối đa 3 ngày (72 giờ)** kể từ lúc hãng vận chuyển xác nhận giao hàng, VÀ điều kiện là **chưa đánh giá đơn hàng**. Nếu đã đánh giá, yêu cầu trả hàng tự động vô hiệu.
+> 2. **Lý do khiếu nại (Chỉ dùng 1 trường `reason` dạng Text):** Để mang lại trải nghiệm linh hoạt nhất cho User, Frontend có thể thiết kế 2 tùy chọn song song: 
+>    - **Option 1 (Chọn nhanh):** Các nút bấm lý do phổ biến (Không đúng mô tả, Rách/hỏng, Thiếu hàng...). Khi User bẩm, FE lấy đoạn text đó lưu vào `reason`.
+>    - **Option 2 (Tự điền tay):** Một ô textarea cho User tự gõ lý do chi tiết. Khi User gõ xong, FE lấy đoạn text đó lưu vào `reason`.
+>    - Backend hiện không ép buộc Enum, mọi thứ User chọn hay nhập đều được đẩy thẳng vào `multipart: reason` như 1 String thông thường.
+> 3. **Điều phối vận chuyển (Sàn không quản lý logistics):** Người mua có trách nhiệm tự liên hệ đơn vị vận chuyển bên ngoài để gửi trả hàng và cung cấp mã vận đơn (Tracking Code) lên hệ thống.
+> 4. **Loại bỏ khiếu nại ngược từ Seller:** Do Buyer đã phải cung cấp bằng chứng rõ ràng ngay từ đầu và Admin đã đứng ra duyệt, nên khi hàng hoàn trả lại, Seller KHÔNG có quyền tạo khiếu nại ngược (loại bỏ trạng thái `RETURN_DISPUTED`). Seller chỉ có nút bấm xác nhận đã nhận hàng trên hệ thống. Mọi vấn đề sai sót khác hai bên tự thỏa thuận dân sự hoặc giải quyết theo luật định.
+> 5. **Tự động hoàn trả (7 ngày):** Kể từ khi Buyer ấn `RETURN_SHIPPED`, nếu Seller không duyệt nút xác nhận, thì sau 7 ngày hệ thống tự động hoàn tiền cho Buyer.
+
+## 2. Dispute Status
+
+| Status | Ý nghĩa |
+|---|---|
+| `OPEN` | Buyer vừa mở dispute (trong phạm vi 3 ngày bảo vệ, chưa review) |
+| `REVIEWING` | Inspector đang xem xét nội dung khiếu nại |
+| `APPROVED` | Admin duyệt yêu cầu hoàn trả, chờ Buyer gửi trả hàng |
+| `RETURN_SHIPPED` | Buyer đã gửi hàng, Seller đang chờ nhận |
+| `RESOLVED` | Dispute kết thúc thành công — hoàn tiền cho Buyer (trừ phí dịch vụ nếu có). |
+| `REJECTED` | Dispute bị từ chối/hủy — tiền về Seller |
+
+## 3. Danh Sách API (Đã giản lược)
+
+### Buyer APIs
+
+| Method | Endpoint | Body | Mô tả |
+|---|---|---|---|
+| `POST` | `/disputes` | `multipart: orderId, reason, proofImage (file)` | Mở dispute (Order DELIVERED, hạn 3 ngày, CẦN check chưa có review) |
+| `PUT` | `/disputes/{id}/shipping-info` | `{ shippingProvider, trackingCode, shippingReceiptUrl }` | Upload mã vận đơn trả hàng (status = APPROVED) |
+
+**Gợi ý các lý do trả hàng cho Frontend làm Option:**
+*   Không đúng như mô tả
+*   Không hoạt động như mô tả
+*   Hư hỏng trong quá trình vận chuyển
+*   Không nhận được đủ hàng
+*   Nhận nhầm sản phẩm
+*(Frontend làm 2 dạng: 1 là cho chọn Option List, 2 là cho User tự gõ Text. Backend chỉ cần nhận String lưu vào `reason`)*
+
+### Seller APIs
+
+| Method | Endpoint | Body | Mô tả |
+|---|---|---|---|
+| `PUT` | `/disputes/{id}/confirm-return-receipt` | _(không có)_ | Seller đã nhận lại hàng ok → xác nhận chủ động → tiến hành hoàn tiền cho Buyer |
+
+*(Lưu ý: API Seller khiếu nại ngược `report-return` đã bị loại bỏ hoàn toàn).*
+
+### Inspector APIs
+
+| Method | Endpoint | Body | Mô tả |
+|---|---|---|---|
+| `PUT` | `/disputes/{id}/inspector-note` | `{ note }` | Ghi chú đánh giá sơ bộ của Inspector (OPEN → REVIEWING) |
+
+### Admin APIs
+
+| Method | Endpoint | Body | Mô tả |
+|---|---|---|---|
+| `PUT` | `/disputes/admin/{id}/approve` | `{ note }` | Duyệt khiếu nại (Chấp nhận yêu cầu trả hàng) → Trạng thái chuyển sang `APPROVED`. |
+| `PUT` | `/disputes/admin/{id}/reject` | `{ note }` | Bác bỏ khiếu nại vô lý → tự động giải tỏa tiền về cho Seller, tranh chấp `REJECTED` |
+
+### Chung (Authenticated)
+
+| Method | Endpoint | Mô tả |
+|---|---|---|
+| `GET` | `/disputes/{id}` | Lấy toàn bộ chi tiết 1 dispute kèm reason, tracking, note |
+| `GET` | `/disputes/my-disputes` | Danh sách lịch sử dispute của user |
+
+## 4. Response Format API
+
+Tất cả các lệnh gọi Dispute sẽ trả về định dạng `ApiResponse<DisputeResponse>`:
+
+```json
+{
+  "code": 1000,
+  "result": {
+    "disputeId": 1,
+    "orderId": 5,
+    "postTitle": "Xe đạp điện Giant cao cấp",
+    "buyerId": 2,
+    "buyerName": "Marcus Holloway",
+    "sellerId": 3,
+    "sellerName": "Wrench",
+    "inspectorId": 4,
+    "status": "OPEN",
+    "reason": "Xe bị xước ở phuộc nhún và không lên điện",
+    "proofImages": ["https://res.cloudinary.com/..."],
+    "inspectorNote": null,
+    "adminNote": null,
+    "shippingProvider": null,
+    "trackingCode": null,
+    "shippingReceiptUrl": null,
+    "returnShippedAt": null,
+    "resolvedAt": null,
+    "createdAt": "2026-03-21T10:00:00",
+    "updatedAt": "2026-03-21T10:00:00"
+  }
+}
+```
+
+## 5. Luồng UI theo Roles (Front-End Roadmap)
+
+```mermaid
+sequenceDiagram
+    participant B as Buyer
+    participant I as Inspector
+    participant A as Admin
+    participant S as Seller
+
+    B->>+API: POST /disputes (mở dispute trong 3 ngày & không có review)
+    Note over API: status = OPEN
+
+    I->>+API: PUT /disputes/{id}/inspector-note
+    Note over API: status = REVIEWING
+
+    A->>+API: PUT /disputes/admin/{id}/approve
+    Note over API: status = APPROVED
+
+    B->>+API: PUT /disputes/{id}/shipping-info
+    Note over API: status = RETURN_SHIPPED
+    
+    S->>+API: PUT /disputes/{id}/confirm-return-receipt
+    Note over API: status = RESOLVED → Xử lý logic hoàn tiền vào Credit/Card cho Buyer
+```
+
+## 6. Auto Scheduler (cron-jobs)
+
+Cấu hình Scheduler tự động đóng/hoàn tất:
+
+| Tác vụ | Điều kiện Trigger | Kết quả xử lý |
+|---|---|---|
+| Auto gửi nhận hàng | Trạng thái SHIPPING quá thời hạn timeout | → DELIVERED |
+| Auto chốt đơn hàng | Trạng thái DELIVERED vượt mức **3 ngày** MÀ không tạo khiếu nại (Hoặc user đã tiến hành review đơn hàng) | → tự động COMPLETED, nhả tiền mặt cho Seller |
+| Auto đóng dispute (Buyer fail) | Trạng thái đã APPROVED quá X ngày, nhưng Buyer không thực gửi mã ship trả hàng | → tự động REJECTED, bỏ chặn giam tiền đưa cho Seller |
+| Auto hoàn tiền (Seller im lặng) | Trạng thái RETURN_SHIPPED quá **7 ngày** mà Seller không xác nhận | → tự động RESOLVED, giải quyết hoàn trả tiền cho Buyer |
+
+## 7. Error Codes Bổ Sung / Liên Quan
+
+| Code | Tên | Diễn giải |
+|---|---|---|
+| 1065 | `DISPUTE_NOT_FOUND` | Không tìm thấy dispute khả dụng |
+| 1066 | `DISPUTE_WINDOW_EXPIRED` | Quá 3 ngày (72h) hoặc đơn hàng đã bị đánh giá, bác bỏ khiếu nại |
+| 1067 | `INVALID_DISPUTE_STATUS` | Sai trạng thái cho thao tác này (e.g., gọi duyệt khi đang shipped) |
+| 1068 | `NOT_DISPUTE_BUYER` | Thiếu quyền Buyer |
+| 1069 | `NOT_DISPUTE_SELLER` | Thiếu quyền Seller |
+| 1070 | `NOT_DISPUTE_INSPECTOR` | Thiếu quyền thanh tra viên hệ thống |
+| 1072 | `ORDER_ALREADY_REVIEWED` | Đơn hàng đã được nhận xét, không hỗ trợ mở trả hàng |
