@@ -6,6 +6,7 @@ import com.swp391.bike_platform.exception.AppException;
 import com.swp391.bike_platform.repository.BicyclePostRepository;
 import com.swp391.bike_platform.repository.OrderRepository;
 import com.swp391.bike_platform.repository.UserAddressRepository;
+import com.swp391.bike_platform.repository.DisputeRepository;
 import com.swp391.bike_platform.request.CreateOrderRequest;
 import com.swp391.bike_platform.response.OrderResponse;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ public class OrderService {
     private final SystemConfigService systemConfigService;
     private final TransactionService transactionService;
     private final CloudinaryService cloudinaryService;
+    private final DisputeRepository disputeRepository;
 
     private static final List<String> ACTIVE_STATUSES = Arrays.asList(
             OrderStatus.DEPOSITED.name(),
@@ -175,7 +177,9 @@ public class OrderService {
             throw new AppException(ErrorCode.INVALID_ORDER_STATUS);
         }
 
-        completeOrder(order);
+        order.setOrderStatus(OrderStatus.DELIVERED.name());
+        order.setDeliveredAt(LocalDateTime.now());
+        orderRepository.save(order);
 
         log.info("Order #{} confirmed delivery by buyer {}", orderId, buyerId);
         return toResponse(order);
@@ -301,12 +305,34 @@ public class OrderService {
                 OrderStatus.SHIPPING.name(), cutoff);
 
         for (Order order : orders) {
-            completeOrder(order);
-            log.info("Order #{} auto-confirmed after {} days", order.getOrderId(), autoConfirmDays);
+            order.setOrderStatus(OrderStatus.DELIVERED.name());
+            order.setDeliveredAt(LocalDateTime.now());
+            orderRepository.save(order);
+            log.info("Order #{} auto-delivered (shipping confirmed) after {} days", order.getOrderId(),
+                    autoConfirmDays);
         }
 
         if (!orders.isEmpty()) {
-            log.info("Auto-confirmed {} orders", orders.size());
+            log.info("Auto-confirmed shipping for {} orders", orders.size());
+        }
+    }
+
+    @Transactional
+    public void autoCompleteDeliveredOrders() {
+        int disputeWindowDays = systemConfigService.getDisputeWindowDays();
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(disputeWindowDays);
+
+        List<Order> orders = orderRepository.findByStatusAndDeliveredAtBefore(
+                OrderStatus.DELIVERED.name(), cutoff);
+
+        for (Order order : orders) {
+            boolean hasActiveDispute = disputeRepository.existsByOrder_OrderIdAndStatusNot(
+                    order.getOrderId(), DisputeStatus.REJECTED.name());
+            if (!hasActiveDispute) {
+                completeOrder(order);
+                log.info("Order #{} auto-completed after {} days of delivery without dispute", order.getOrderId(),
+                        disputeWindowDays);
+            }
         }
     }
 
@@ -330,7 +356,7 @@ public class OrderService {
 
     // ─────────────────── HELPERS ───────────────────
 
-    private void completeOrder(Order order) {
+    public void completeOrder(Order order) {
         // Transfer money to seller wallet based on payment type
         // PAID (payFull) → transfer totalPrice; DEPOSITED (COD) → transfer
         // depositAmount only
@@ -396,6 +422,7 @@ public class OrderService {
                 .shippingTrackingNumber(order.getShippingTrackingNumber())
                 .proofImage(order.getProofImage())
                 .shippedAt(order.getShippedAt())
+                .deliveredAt(order.getDeliveredAt())
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt());
 

@@ -26,4 +26,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     // Auto-confirm: find SHIPPING orders where shippedAt is before the cutoff
     @Query("SELECT o FROM Order o WHERE o.orderStatus = :status AND o.shippedAt <= :cutoff")
     List<Order> findByStatusAndShippedAtBefore(@Param("status") String status, @Param("cutoff") LocalDateTime cutoff);
+
+    // Auto-complete: find DELIVERED orders where deliveredAt is before the cutoff
+    @Query("SELECT o FROM Order o WHERE o.orderStatus = :status AND o.deliveredAt <= :cutoff")
+    List<Order> findByStatusAndDeliveredAtBefore(@Param("status") String status, @Param("cutoff") LocalDateTime cutoff);
 }

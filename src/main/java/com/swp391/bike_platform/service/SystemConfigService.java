@@ -41,6 +41,39 @@ public class SystemConfigService {
     }
 
     /**
+     * Get dispute window days (default 3)
+     */
+    public int getDisputeWindowDays() {
+        try {
+            return Integer.parseInt(getConfigValue("DISPUTE_WINDOW_DAYS"));
+        } catch (AppException e) {
+            return 3;
+        }
+    }
+
+    /**
+     * Get days for auto closing unshipped dispute (default 5)
+     */
+    public int getAutoCloseUnshippedDisputeDays() {
+        try {
+            return Integer.parseInt(getConfigValue("AUTO_CLOSE_UNSHIPPED_DISPUTE_DAYS"));
+        } catch (AppException e) {
+            return 5;
+        }
+    }
+
+    /**
+     * Get days for auto refunding shipped dispute (default 7)
+     */
+    public int getAutoRefundShippedDisputeDays() {
+        try {
+            return Integer.parseInt(getConfigValue("AUTO_REFUND_SHIPPED_DISPUTE_DAYS"));
+        } catch (AppException e) {
+            return 7;
+        }
+    }
+
+    /**
      * Get config value by key
      */
     public String getConfigValue(String key) {

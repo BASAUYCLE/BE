@@ -3814,6 +3814,18 @@ BEGIN
         INSERT INTO SystemConfig (config_key, config_value, description, updated_at)
         VALUES ('AUTO_CONFIRM_DAYS', '7', N'Tự động xác nhận sau X ngày', GETDATE());
 
+    IF NOT EXISTS (SELECT 1 FROM SystemConfig WHERE config_key = 'DISPUTE_WINDOW_DAYS')
+        INSERT INTO SystemConfig (config_key, config_value, description, updated_at)
+        VALUES ('DISPUTE_WINDOW_DAYS', '3', N'Thời hạn Buyer được phép mở khiếu nại (ngày)', GETDATE());
+
+    IF NOT EXISTS (SELECT 1 FROM SystemConfig WHERE config_key = 'AUTO_CLOSE_UNSHIPPED_DISPUTE_DAYS')
+        INSERT INTO SystemConfig (config_key, config_value, description, updated_at)
+        VALUES ('AUTO_CLOSE_UNSHIPPED_DISPUTE_DAYS', '5', N'Hạn chót để Buyer gửi kiện hàng hoàn trả xe (ngày)', GETDATE());
+
+    IF NOT EXISTS (SELECT 1 FROM SystemConfig WHERE config_key = 'AUTO_REFUND_SHIPPED_DISPUTE_DAYS')
+        INSERT INTO SystemConfig (config_key, config_value, description, updated_at)
+        VALUES ('AUTO_REFUND_SHIPPED_DISPUTE_DAYS', '7', N'Hạn chót để Seller check bill hoàn xe (ngày)', GETDATE());
+
     PRINT 'SystemConfig seed data inserted.';
 END
 GO

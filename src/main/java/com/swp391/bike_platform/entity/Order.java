@@ -55,6 +55,9 @@ public class Order {
     @Column(name = "shipped_at")
     private LocalDateTime shippedAt;
 
+    @Column(name = "delivered_at")
+    private LocalDateTime deliveredAt;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

@@ -26,6 +26,7 @@ public class OrderResponse {
     private String shippingTrackingNumber;
     private String proofImage;
     private LocalDateTime shippedAt;
+    private LocalDateTime deliveredAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

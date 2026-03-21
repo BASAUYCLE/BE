@@ -129,6 +129,14 @@ public class SecurityConfig {
                                                 // Orders - Authenticated (buyer/seller manage orders)
                                                 .requestMatchers("/orders", "/orders/**").authenticated()
 
+                                                // Disputes - Roles specific
+                                                .requestMatchers("/disputes/admin/**")
+                                                .hasRole(UserEnum.ADMIN.name())
+                                                .requestMatchers(HttpMethod.PUT, "/disputes/*/inspector-note")
+                                                .hasRole(UserEnum.INSPECTOR.name())
+                                                .requestMatchers("/disputes", "/disputes/**")
+                                                .authenticated()
+
                                                 // All other requests need authentication
                                                 .anyRequest().authenticated())
                                 .oauth2ResourceServer(oauth2 -> oauth2

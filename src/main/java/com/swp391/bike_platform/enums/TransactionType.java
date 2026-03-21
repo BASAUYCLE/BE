@@ -6,5 +6,6 @@ public enum TransactionType {
     PURCHASE,
     REFUND,
     POSTING_FEE,
-    PAY_REMAINING
+    PAY_REMAINING,
+    DISPUTE_REFUND
 }
