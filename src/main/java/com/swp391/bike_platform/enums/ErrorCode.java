@@ -71,7 +71,16 @@ public enum ErrorCode {
     FEEDBACK_NOT_FOUND(1062, "Feedback not found for this order", HttpStatus.NOT_FOUND),
     ORDER_NOT_COMPLETED(1063, "Order must be completed before leaving feedback", HttpStatus.BAD_REQUEST),
     INVALID_RATING(1064, "Rating must be between 1 and 5", HttpStatus.BAD_REQUEST),
-    ;
+    DISPUTE_NOT_FOUND(1065, "Dispute not found", HttpStatus.NOT_FOUND),
+    DISPUTE_WINDOW_EXPIRED(1066, "Dispute window has expired", HttpStatus.BAD_REQUEST),
+    INVALID_DISPUTE_STATUS(1067, "Invalid dispute status for this action", HttpStatus.BAD_REQUEST),
+    NOT_DISPUTE_BUYER(1068, "You are not the buyer of this dispute", HttpStatus.FORBIDDEN),
+    NOT_DISPUTE_SELLER(1069, "You are not the seller of this dispute", HttpStatus.FORBIDDEN),
+    NOT_DISPUTE_INSPECTOR(1070, "You are not the assigned inspector of this dispute", HttpStatus.FORBIDDEN),
+    ORDER_ALREADY_REVIEWED(1072, "Order has already been reviewed", HttpStatus.BAD_REQUEST),
+    CANNOT_DISPUTE_COD_RECEIPT(1073, "Cannot dispute a COD order after successfully receiving it",
+            HttpStatus.BAD_REQUEST),
+            ;
 
     ErrorCode(int code, String message, HttpStatus statusCode) {
         this.code = code;
