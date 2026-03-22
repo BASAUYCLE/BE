@@ -80,7 +80,9 @@ public enum ErrorCode {
     ORDER_ALREADY_REVIEWED(1072, "Order has already been reviewed", HttpStatus.BAD_REQUEST),
     CANNOT_DISPUTE_COD_RECEIPT(1073, "Cannot dispute a COD order after successfully receiving it",
             HttpStatus.BAD_REQUEST),
-            ;
+    UNAUTHORIZED_INSPECTOR(1074, "You are not the inspector who approved this post", HttpStatus.FORBIDDEN),
+    INSPECTION_REPORT_NOT_FOUND(1075, "Inspection report not found for this post", HttpStatus.NOT_FOUND),
+    ;
 
     ErrorCode(int code, String message, HttpStatus statusCode) {
         this.code = code;

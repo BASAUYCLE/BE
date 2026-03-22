@@ -32,6 +32,9 @@ import com.swp391.bike_platform.entity.Wallet;
 import com.swp391.bike_platform.enums.PostStatus;
 import com.swp391.bike_platform.enums.TransactionType;
 import com.swp391.bike_platform.repository.BicyclePostRepository;
+import com.swp391.bike_platform.repository.InspectionReportRepository;
+import com.swp391.bike_platform.entity.InspectionReport;
+import com.swp391.bike_platform.enums.UserEnum;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +50,7 @@ public class DisputeService {
     private final TransactionService transactionService;
     private final BicyclePostRepository bicyclePostRepository;
     private final FeedbackRepository feedbackRepository;
+    private final InspectionReportRepository inspectionReportRepository;
 
     // ─────────────────── POST /disputes (BUYER MỞ DISPUTE) ───────────────────
     @Transactional
@@ -130,7 +134,34 @@ public class DisputeService {
     // ─────────────────── GET /disputes/{id} ───────────────────
     public DisputeResponse getDisputeById(Long disputeId, Long userId) {
         Dispute dispute = findDisputeById(disputeId);
-        return toResponse(dispute);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // Admin can view all disputes
+        if (UserEnum.ADMIN.equals(user.getRole())) {
+            return toResponse(dispute);
+        }
+
+        // Buyer or Seller of the order can view
+        Long buyerId = dispute.getBuyer().getUserId();
+        Long sellerId = dispute.getOrder().getPost().getSeller().getUserId();
+        if (buyerId.equals(userId) || sellerId.equals(userId)) {
+            return toResponse(dispute);
+        }
+
+        // Inspector: only if they approved the post
+        if (UserEnum.INSPECTOR.equals(user.getRole())) {
+            Long postId = dispute.getOrder().getPost().getPostId();
+            InspectionReport report = inspectionReportRepository.findByPost_PostId(postId)
+                    .orElseThrow(() -> new AppException(ErrorCode.INSPECTION_REPORT_NOT_FOUND));
+            if (report.getInspector().getUserId().equals(userId)) {
+                return toResponse(dispute);
+            }
+            throw new AppException(ErrorCode.UNAUTHORIZED_INSPECTOR);
+        }
+
+        throw new AppException(ErrorCode.UNAUTHORIZED);
     }
 
     // ─────────────────── GET /disputes/my-disputes ───────────────────
@@ -145,19 +176,29 @@ public class DisputeService {
     public DisputeResponse addInspectorNote(Long disputeId, Long inspectorId, NoteRequest request) {
         Dispute dispute = findDisputeById(disputeId);
 
+        // Only allow adding/updating note when dispute is OPEN
+        if (!DisputeStatus.OPEN.name().equals(dispute.getStatus())) {
+            throw new AppException(ErrorCode.INVALID_DISPUTE_STATUS);
+        }
+
+        // Verify inspector is the one who approved the post
+        Long postId = dispute.getOrder().getPost().getPostId();
+        InspectionReport report = inspectionReportRepository.findByPost_PostId(postId)
+                .orElseThrow(() -> new AppException(ErrorCode.INSPECTION_REPORT_NOT_FOUND));
+
+        if (!report.getInspector().getUserId().equals(inspectorId)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED_INSPECTOR);
+        }
+
+        // Auto-assign inspector to dispute if not yet assigned
         if (dispute.getInspector() == null) {
             User inspector = userRepository.findById(inspectorId)
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
             dispute.setInspector(inspector);
-        } else if (!dispute.getInspector().getUserId().equals(inspectorId)) {
-            throw new AppException(ErrorCode.NOT_DISPUTE_INSPECTOR);
         }
 
         dispute.setInspectorNote(request.getNote());
-
-        if (DisputeStatus.OPEN.name().equals(dispute.getStatus())) {
-            dispute.setStatus(DisputeStatus.REVIEWING.name());
-        }
+        dispute.setStatus(DisputeStatus.REVIEWING.name());
 
         dispute = disputeRepository.save(dispute);
         log.info("Inspector {} added note to Dispute #{}", inspectorId, disputeId);
