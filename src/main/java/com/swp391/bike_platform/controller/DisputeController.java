@@ -71,7 +71,8 @@ public class DisputeController {
                                 .build();
         }
 
-        // ─────────────────── INSPECTOR: GET MY DISPUTES ───────────────────
+        // ─────────────────── INSPECTOR: GET MY DISPUTES(POST THAT I APPROVE)
+        // ───────────────────
 
         @GetMapping("/inspector/my-disputes")
         public ApiResponse<List<DisputeResponse>> getInspectorDisputes(@AuthenticationPrincipal Jwt jwt) {

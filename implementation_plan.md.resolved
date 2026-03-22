@@ -149,7 +149,7 @@ Cấu hình Scheduler tự động đóng/hoàn tất:
 | Tác vụ | Điều kiện Trigger | Kết quả xử lý |
 |---|---|---|
 | Auto gửi nhận hàng | Trạng thái SHIPPING quá thời hạn timeout | → DELIVERED |
-| Auto chốt đơn hàng | Trạng thái DELIVERED vượt mức **3 ngày** MÀ không tạo khiếu nại (Hoặc user đã tiến hành review đơn hàng) | → tự động COMPLETED, nhả tiền mặt cho Seller |
+| Auto chốt đơn hàng | Trạng thái DELIVERED vượt mức **3 ngày** MÀ không tạo khiếu nại (Hoặc user đã tiến hành feedback đơn hàng) | → tự động COMPLETED, nhả tiền mặt cho Seller |
 | Auto đóng dispute (Buyer fail) | Trạng thái đã APPROVED quá X ngày, nhưng Buyer không thực gửi mã ship trả hàng | → tự động REJECTED, bỏ chặn giam tiền đưa cho Seller |
 | Auto hoàn tiền (Seller im lặng) | Trạng thái RETURN_SHIPPED quá **7 ngày** mà Seller không xác nhận | → tự động RESOLVED, giải quyết hoàn trả tiền cho Buyer |
 
