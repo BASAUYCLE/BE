@@ -114,9 +114,15 @@ public class DisputeService {
         }
         String imageUrl = cloudinaryService.uploadImage(request.getProofImage());
 
+        // Auto-assign inspector from InspectionReport
+        User postInspector = inspectionReportRepository.findByPost_PostId(order.getPost().getPostId())
+                .map(InspectionReport::getInspector)
+                .orElse(null);
+
         Dispute dispute = Dispute.builder()
                 .order(order)
                 .buyer(order.getBuyer())
+                .inspector(postInspector)
                 .status(DisputeStatus.OPEN.name())
                 .reason(request.getReason())
                 .proofImages(imageUrl)
