@@ -207,6 +207,7 @@ public class OrderService {
                 formatDescription("-", remaining, "Thanh toán phần còn lại đơn #" + orderId));
 
         order.setOrderStatus(OrderStatus.PAID.name());
+        order.setDepositAmount(order.getTotalPrice()); // Update deposit as platform now holds full payment
         orderRepository.save(order);
 
         log.info("Order #{} fully paid by buyer {}", orderId, buyerId);
@@ -358,14 +359,11 @@ public class OrderService {
 
     public void completeOrder(Order order) {
         // Transfer money to seller wallet based on payment type
-        // PAID (payFull) → transfer totalPrice; DEPOSITED (COD) → transfer
-        // depositAmount only
+        // The exact amount platform holds is in depositAmount
         Long sellerId = order.getPost().getSeller().getUserId();
         Wallet sellerWallet = walletService.getOrCreateWallet(sellerId);
 
-        BigDecimal sellerAmount = OrderStatus.PAID.name().equals(order.getOrderStatus())
-                ? order.getTotalPrice()
-                : order.getDepositAmount();
+        BigDecimal sellerAmount = order.getDepositAmount();
 
         walletService.addBalance(sellerWallet.getWalletId(), sellerAmount);
 

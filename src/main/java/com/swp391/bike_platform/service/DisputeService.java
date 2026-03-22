@@ -354,9 +354,8 @@ public class DisputeService {
         // Transfer money to Seller
         Long sellerId = order.getPost().getSeller().getUserId();
         Wallet sellerWallet = walletService.getOrCreateWallet(sellerId);
-        BigDecimal sellerAmount = OrderStatus.PAID.name().equals(order.getOrderStatus())
-                ? order.getTotalPrice()
-                : order.getDepositAmount();
+
+        BigDecimal sellerAmount = order.getDepositAmount();
 
         walletService.addBalance(sellerWallet.getWalletId(), sellerAmount);
         transactionService.createOrderTransaction(
@@ -383,9 +382,8 @@ public class DisputeService {
         // Refund money to Buyer
         Long buyerId = order.getBuyer().getUserId();
         Wallet buyerWallet = walletService.getOrCreateWallet(buyerId);
-        BigDecimal refundAmount = OrderStatus.PAID.name().equals(order.getOrderStatus())
-                ? order.getTotalPrice()
-                : order.getDepositAmount();
+
+        BigDecimal refundAmount = order.getDepositAmount();
 
         walletService.addBalance(buyerWallet.getWalletId(), refundAmount);
         transactionService.createOrderTransaction(
