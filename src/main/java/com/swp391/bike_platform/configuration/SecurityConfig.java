@@ -132,6 +132,8 @@ public class SecurityConfig {
                                                 // Disputes - Roles specific
                                                 .requestMatchers("/disputes/admin/**")
                                                 .hasRole(UserEnum.ADMIN.name())
+                                                .requestMatchers("/disputes/inspector/**")
+                                                .hasRole(UserEnum.INSPECTOR.name())
                                                 .requestMatchers(HttpMethod.PUT, "/disputes/*/inspector-note")
                                                 .hasRole(UserEnum.INSPECTOR.name())
                                                 .requestMatchers("/disputes", "/disputes/**")

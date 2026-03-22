@@ -171,6 +171,21 @@ public class DisputeService {
                 .collect(Collectors.toList());
     }
 
+    // ─────────────────── GET /disputes/admin/all (ADMIN) ───────────────────
+    public List<DisputeResponse> getAllDisputes() {
+        return disputeRepository.findAllByOrderByCreatedAtDesc().stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    // ─────────────────── GET /disputes/inspector/my-disputes (INSPECTOR)
+    // ───────────────────
+    public List<DisputeResponse> getDisputesByInspector(Long inspectorId) {
+        return disputeRepository.findByInspectorPostApprover(inspectorId).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
     // ─────────────────── PUT /disputes/{id}/inspector-note ───────────────────
     @Transactional
     public DisputeResponse addInspectorNote(Long disputeId, Long inspectorId, NoteRequest request) {

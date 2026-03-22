@@ -11,24 +11,33 @@ import java.util.List;
 
 @Repository
 public interface DisputeRepository extends JpaRepository<Dispute, Long> {
-    List<Dispute> findByBuyer_UserIdOrderByCreatedAtDesc(Long buyerId);
+        List<Dispute> findByBuyer_UserIdOrderByCreatedAtDesc(Long buyerId);
 
-    List<Dispute> findByOrder_Post_Seller_UserIdOrderByCreatedAtDesc(Long sellerId);
+        List<Dispute> findByOrder_Post_Seller_UserIdOrderByCreatedAtDesc(Long sellerId);
 
-    List<Dispute> findByInspector_UserIdOrderByCreatedAtDesc(Long inspectorId);
+        List<Dispute> findByInspector_UserIdOrderByCreatedAtDesc(Long inspectorId);
 
-    // Gộp cả Buyer lẫn Seller trong 1 query
-    @Query("SELECT d FROM Dispute d WHERE d.buyer.userId = :userId OR d.order.post.seller.userId = :userId ORDER BY d.createdAt DESC")
-    List<Dispute> findByBuyerOrSeller(@Param("userId") Long userId);
+        // Gộp cả Buyer lẫn Seller trong 1 query
+        @Query("SELECT d FROM Dispute d WHERE d.buyer.userId = :userId OR d.order.post.seller.userId = :userId ORDER BY d.createdAt DESC")
+        List<Dispute> findByBuyerOrSeller(@Param("userId") Long userId);
 
-    // Dùng cho autoCompleteDeliveredOrders — check xem Order có dispute chưa
-    boolean existsByOrder_OrderIdAndStatusNot(Long orderId, String excludedStatus);
+        // Dùng cho autoCompleteDeliveredOrders — check xem Order có dispute chưa
+        boolean existsByOrder_OrderIdAndStatusNot(Long orderId, String excludedStatus);
 
-    @Query("SELECT d FROM Dispute d WHERE d.status = :status AND d.updatedAt < :deadline")
-    List<Dispute> findByStatusAndUpdatedAtBefore(@Param("status") String status,
-            @Param("deadline") LocalDateTime deadline);
+        @Query("SELECT d FROM Dispute d WHERE d.status = :status AND d.updatedAt < :deadline")
+        List<Dispute> findByStatusAndUpdatedAtBefore(@Param("status") String status,
+                        @Param("deadline") LocalDateTime deadline);
 
-    @Query("SELECT d FROM Dispute d WHERE d.status = :status AND d.returnShippedAt < :deadline")
-    List<Dispute> findByStatusAndReturnShippedAtBefore(@Param("status") String status,
-            @Param("deadline") LocalDateTime deadline);
+        @Query("SELECT d FROM Dispute d WHERE d.status = :status AND d.returnShippedAt < :deadline")
+        List<Dispute> findByStatusAndReturnShippedAtBefore(@Param("status") String status,
+                        @Param("deadline") LocalDateTime deadline);
+
+        // Admin: get all disputes
+        List<Dispute> findAllByOrderByCreatedAtDesc();
+
+        // Inspector: get disputes for posts they approved
+        @Query("SELECT d FROM Dispute d WHERE d.order.post.postId IN " +
+                        "(SELECT ir.post.postId FROM InspectionReport ir WHERE ir.inspector.userId = :inspectorId) " +
+                        "ORDER BY d.createdAt DESC")
+        List<Dispute> findByInspectorPostApprover(@Param("inspectorId") Long inspectorId);
 }

@@ -22,82 +22,100 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DisputeController {
 
-    private final DisputeService disputeService;
-    private final UserService userService;
+        private final DisputeService disputeService;
+        private final UserService userService;
 
-    private Long getCurrentUserId(Jwt jwt) {
-        User user = userService.getUserEntityByEmail(jwt.getSubject());
-        return user.getUserId();
-    }
+        private Long getCurrentUserId(Jwt jwt) {
+                User user = userService.getUserEntityByEmail(jwt.getSubject());
+                return user.getUserId();
+        }
 
-    @PostMapping
-    public ApiResponse<DisputeResponse> createDispute(@AuthenticationPrincipal Jwt jwt,
-            @ModelAttribute CreateDisputeRequest request) throws IOException {
-        return ApiResponse.<DisputeResponse>builder()
-                .result(disputeService.createDispute(getCurrentUserId(jwt), request))
-                .build();
-    }
+        @PostMapping
+        public ApiResponse<DisputeResponse> createDispute(@AuthenticationPrincipal Jwt jwt,
+                        @ModelAttribute CreateDisputeRequest request) throws IOException {
+                return ApiResponse.<DisputeResponse>builder()
+                                .result(disputeService.createDispute(getCurrentUserId(jwt), request))
+                                .build();
+        }
 
-    @GetMapping("/{id}")
-    public ApiResponse<DisputeResponse> getDisputeById(@AuthenticationPrincipal Jwt jwt,
-            @PathVariable Long id) {
-        return ApiResponse.<DisputeResponse>builder()
-                .result(disputeService.getDisputeById(id, getCurrentUserId(jwt)))
-                .build();
-    }
+        @GetMapping("/{id}")
+        public ApiResponse<DisputeResponse> getDisputeById(@AuthenticationPrincipal Jwt jwt,
+                        @PathVariable Long id) {
+                return ApiResponse.<DisputeResponse>builder()
+                                .result(disputeService.getDisputeById(id, getCurrentUserId(jwt)))
+                                .build();
+        }
 
-    @GetMapping("/my-disputes")
-    public ApiResponse<List<DisputeResponse>> getMyDisputes(@AuthenticationPrincipal Jwt jwt) {
-        return ApiResponse.<List<DisputeResponse>>builder()
-                .result(disputeService.getMyDisputes(getCurrentUserId(jwt)))
-                .build();
-    }
+        @GetMapping("/my-disputes")
+        public ApiResponse<List<DisputeResponse>> getMyDisputes(@AuthenticationPrincipal Jwt jwt) {
+                return ApiResponse.<List<DisputeResponse>>builder()
+                                .result(disputeService.getMyDisputes(getCurrentUserId(jwt)))
+                                .build();
+        }
 
-    @PutMapping("/{id}/inspector-note")
-    public ApiResponse<DisputeResponse> addInspectorNote(@AuthenticationPrincipal Jwt jwt,
-            @PathVariable Long id,
-            @RequestBody NoteRequest request) {
-        return ApiResponse.<DisputeResponse>builder()
-                .result(disputeService.addInspectorNote(id, getCurrentUserId(jwt), request))
-                .build();
-    }
+        @PutMapping("/{id}/inspector-note")
+        public ApiResponse<DisputeResponse> addInspectorNote(@AuthenticationPrincipal Jwt jwt,
+                        @PathVariable Long id,
+                        @RequestBody NoteRequest request) {
+                return ApiResponse.<DisputeResponse>builder()
+                                .result(disputeService.addInspectorNote(id, getCurrentUserId(jwt), request))
+                                .build();
+        }
 
-    // ─────────────────── ADMIN ENDPOINTS ───────────────────
+        // ─────────────────── ADMIN: GET ALL DISPUTES ───────────────────
 
-    @PutMapping("/admin/{id}/approve")
-    public ApiResponse<DisputeResponse> approveDispute(@AuthenticationPrincipal Jwt jwt,
-            @PathVariable Long id,
-            @RequestBody(required = false) NoteRequest request) {
-        return ApiResponse.<DisputeResponse>builder()
-                .result(disputeService.approveDispute(id, getCurrentUserId(jwt), request))
-                .build();
-    }
+        @GetMapping("/admin/all")
+        public ApiResponse<List<DisputeResponse>> getAllDisputes() {
+                return ApiResponse.<List<DisputeResponse>>builder()
+                                .result(disputeService.getAllDisputes())
+                                .build();
+        }
 
-    @PutMapping("/admin/{id}/reject")
-    public ApiResponse<DisputeResponse> rejectDispute(@AuthenticationPrincipal Jwt jwt,
-            @PathVariable Long id,
-            @RequestBody(required = false) NoteRequest request) {
-        return ApiResponse.<DisputeResponse>builder()
-                .result(disputeService.rejectDisputeByAdmin(id, getCurrentUserId(jwt), request))
-                .build();
-    }
+        // ─────────────────── INSPECTOR: GET MY DISPUTES ───────────────────
 
-    // ─────────────────── BUYER / SELLER ENDPOINTS ───────────────────
+        @GetMapping("/inspector/my-disputes")
+        public ApiResponse<List<DisputeResponse>> getInspectorDisputes(@AuthenticationPrincipal Jwt jwt) {
+                return ApiResponse.<List<DisputeResponse>>builder()
+                                .result(disputeService.getDisputesByInspector(getCurrentUserId(jwt)))
+                                .build();
+        }
 
-    @PutMapping("/{id}/shipping-info")
-    public ApiResponse<DisputeResponse> updateShippingInfo(@AuthenticationPrincipal Jwt jwt,
-            @PathVariable Long id,
-            @RequestBody UpdateShippingInfoRequest request) {
-        return ApiResponse.<DisputeResponse>builder()
-                .result(disputeService.updateShippingInfo(id, getCurrentUserId(jwt), request))
-                .build();
-    }
+        // ─────────────────── ADMIN ENDPOINTS ───────────────────
 
-    @PutMapping("/{id}/confirm-return-receipt")
-    public ApiResponse<DisputeResponse> confirmReturnReceipt(@AuthenticationPrincipal Jwt jwt,
-            @PathVariable Long id) {
-        return ApiResponse.<DisputeResponse>builder()
-                .result(disputeService.confirmReturnReceipt(id, getCurrentUserId(jwt)))
-                .build();
-    }
+        @PutMapping("/admin/{id}/approve")
+        public ApiResponse<DisputeResponse> approveDispute(@AuthenticationPrincipal Jwt jwt,
+                        @PathVariable Long id,
+                        @RequestBody(required = false) NoteRequest request) {
+                return ApiResponse.<DisputeResponse>builder()
+                                .result(disputeService.approveDispute(id, getCurrentUserId(jwt), request))
+                                .build();
+        }
+
+        @PutMapping("/admin/{id}/reject")
+        public ApiResponse<DisputeResponse> rejectDispute(@AuthenticationPrincipal Jwt jwt,
+                        @PathVariable Long id,
+                        @RequestBody(required = false) NoteRequest request) {
+                return ApiResponse.<DisputeResponse>builder()
+                                .result(disputeService.rejectDisputeByAdmin(id, getCurrentUserId(jwt), request))
+                                .build();
+        }
+
+        // ─────────────────── BUYER / SELLER ENDPOINTS ───────────────────
+
+        @PutMapping("/{id}/shipping-info")
+        public ApiResponse<DisputeResponse> updateShippingInfo(@AuthenticationPrincipal Jwt jwt,
+                        @PathVariable Long id,
+                        @RequestBody UpdateShippingInfoRequest request) {
+                return ApiResponse.<DisputeResponse>builder()
+                                .result(disputeService.updateShippingInfo(id, getCurrentUserId(jwt), request))
+                                .build();
+        }
+
+        @PutMapping("/{id}/confirm-return-receipt")
+        public ApiResponse<DisputeResponse> confirmReturnReceipt(@AuthenticationPrincipal Jwt jwt,
+                        @PathVariable Long id) {
+                return ApiResponse.<DisputeResponse>builder()
+                                .result(disputeService.confirmReturnReceipt(id, getCurrentUserId(jwt)))
+                                .build();
+        }
 }
