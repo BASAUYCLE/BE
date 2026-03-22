@@ -369,7 +369,7 @@ public class OrderService {
 
         transactionService.createOrderTransaction(
                 sellerWallet, sellerWallet.getUser(), order.getPost(),
-                TransactionType.PURCHASE, sellerAmount,
+                TransactionType.RELEASE_MONEY, sellerAmount,
                 formatDescription("+", sellerAmount,
                         "Nhận tiền bán đơn #" + order.getOrderId()));
 
