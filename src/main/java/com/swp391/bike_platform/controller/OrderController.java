@@ -100,8 +100,9 @@ public class OrderController {
         }
 
         /**
-         * PUT /orders/{id}/confirm-delivery — Buyer confirms delivery (SHIPPING →
-         * COMPLETED)
+         * PUT /orders/{id}/confirm-delivery — Buyer confirms physical receipt of the
+         * physical item.
+         * For Deposited -> COMPLETED. For Paid Full -> DELIVERED (waits for dispute).
          */
         @PutMapping("/{id}/confirm-delivery")
         public ApiResponse<OrderResponse> confirmDelivery(@AuthenticationPrincipal Jwt jwt,
@@ -110,6 +111,20 @@ public class OrderController {
                 return ApiResponse.<OrderResponse>builder()
                                 .result(orderService.confirmDelivery(id, user.getUserId()))
                                 .message("Delivery confirmed successfully")
+                                .build();
+        }
+
+        /**
+         * PUT /orders/{id}/complete — Buyer completes the FULL PAID order explicitly
+         * (waives dispute, DELIVERED → COMPLETED)
+         */
+        @PutMapping("/{id}/complete")
+        public ApiResponse<OrderResponse> completeOrderManually(@AuthenticationPrincipal Jwt jwt,
+                        @PathVariable Long id) {
+                User user = userService.getUserEntityByEmail(jwt.getSubject());
+                return ApiResponse.<OrderResponse>builder()
+                                .result(orderService.completeOrderManually(id, user.getUserId()))
+                                .message("Order completed successfully. You can now rate this order.")
                                 .build();
         }
 

@@ -35,10 +35,7 @@ public class UserController {
     public UserResponse uploadAvatar(
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
-        String email = jwt.getClaim("email"); // or jwt.getSubject() depending on actual auth, but we need email? Wait,
-                                              // let's look at UserService uploadAvatar. UserService uploadAvatar takes
-                                              // email and file.
-        if (email == null)
+        String email = jwt.getClaim("email"); 
             email = jwt.getSubject();
         return userService.uploadAvatar(email, file);
     }

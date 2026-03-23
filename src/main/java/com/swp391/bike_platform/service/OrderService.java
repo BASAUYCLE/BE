@@ -177,11 +177,49 @@ public class OrderService {
             throw new AppException(ErrorCode.INVALID_ORDER_STATUS);
         }
 
-        order.setOrderStatus(OrderStatus.DELIVERED.name());
         order.setDeliveredAt(LocalDateTime.now());
-        orderRepository.save(order);
 
-        log.info("Order #{} confirmed delivery by buyer {}", orderId, buyerId);
+        boolean isDepositOrder = order.getDepositAmount().compareTo(order.getTotalPrice()) < 0;
+
+        if (isDepositOrder) {
+            // Đơn Deposited: SHIPPING -> COMPLETED luôn (như user yêu cầu)
+            completeOrder(order); // Hàm này tự set status = COMPLETED và save
+        } else {
+            // Đơn Full Paid: SHIPPING -> DELIVERED (đợi Dispute hoặc xác nhận đơn)
+            order.setOrderStatus(OrderStatus.DELIVERED.name());
+            orderRepository.save(order);
+        }
+
+        log.info("Order #{} delivery confirmed by buyer {}", orderId, buyerId);
+        return toResponse(order);
+    }
+
+    @Transactional
+    public OrderResponse completeOrderManually(Long orderId, Long buyerId) {
+        Order order = findOrderById(orderId);
+        validateBuyer(order, buyerId);
+
+        boolean isDepositOrder = order.getDepositAmount().compareTo(order.getTotalPrice()) < 0;
+
+        if (isDepositOrder) {
+            // Đối với luồng Deposited: Nút "Xác nhận đơn" được bấm ngay lúc SHIPPING (hoặc
+            // DELIVERED nếu lỡ auto)
+            if (!OrderStatus.SHIPPING.name().equals(order.getOrderStatus())
+                    && !OrderStatus.DELIVERED.name().equals(order.getOrderStatus())) {
+                throw new AppException(ErrorCode.INVALID_ORDER_STATUS);
+            }
+        } else {
+            // Đối với luồng Full Paid: Nút "Xác nhận đơn" chỉ hiện khi đã lấy hàng xong
+            // (DELIVERED)
+            if (!OrderStatus.DELIVERED.name().equals(order.getOrderStatus())) {
+                throw new AppException(ErrorCode.INVALID_ORDER_STATUS);
+            }
+        }
+
+        // Bỏ qua dispute window -> chuyển thẳng COMPLETED và nhả tiền
+        completeOrder(order);
+
+        log.info("Order #{} manually confirmed as completed by buyer {}", orderId, buyerId);
         return toResponse(order);
     }
 
