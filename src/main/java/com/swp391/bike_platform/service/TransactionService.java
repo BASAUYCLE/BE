@@ -20,6 +20,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
@@ -112,6 +117,14 @@ public class TransactionService {
     }
 
     /**
+     * Get ALL transactions for Admin with pagination
+     */
+    public Page<TransactionResponse> getAllTransactionsForAdmin(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return transactionRepository.findAll(pageable).map(this::toResponse);
+    }
+
+    /**
      * Get single transaction by id
      */
     public TransactionResponse getById(Long transactionId) {
@@ -157,6 +170,9 @@ public class TransactionService {
                 .description(t.getDescription())
                 .vnpBankCode(t.getVnpBankCode())
                 .postId(t.getPost() != null ? t.getPost().getPostId() : null)
+                .userId(t.getUser() != null ? t.getUser().getUserId() : null)
+                .userEmail(t.getUser() != null ? t.getUser().getEmail() : null)
+                .userFullName(t.getUser() != null ? t.getUser().getFullName() : null)
                 .createdAt(t.getCreatedAt())
                 .build();
     }

@@ -17,5 +17,8 @@ public class TransactionResponse {
     private String description;
     private String vnpBankCode;
     private Long postId;
+    private Long userId;
+    private String userEmail;
+    private String userFullName;
     private LocalDateTime createdAt;
 }
