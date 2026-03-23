@@ -13,8 +13,10 @@ public class FeedbackResponse {
     private Long orderId;
     private Long buyerId;
     private String buyerName;
+    private String buyerAvatarUrl;
     private Long sellerId;
     private String sellerName;
+    private String sellerAvatarUrl;
     private Long postId;
     private String postTitle;
     private Integer rating;

@@ -103,6 +103,24 @@ public class InspectionService {
     }
 
     /**
+     * Admin: Lấy toàn bộ lịch sử inspector duyệt bài
+     */
+    public List<InspectionReportResponse> getApprovalHistory() {
+        return inspectionReportRepository.findAllByOrderByCreatedAtDesc().stream()
+                .map(r -> toReportResponse(r, r.getPost().getPostStatus()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Inspector: Lấy lịch sử duyệt bài của mình
+     */
+    public List<InspectionReportResponse> getMyApprovalHistory(Long inspectorId) {
+        return inspectionReportRepository.findByInspector_UserId(inspectorId).stream()
+                .map(r -> toReportResponse(r, r.getPost().getPostStatus()))
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Hoàn phí đăng bài vào ví người bán và tạo transaction REFUND
      */
     private void refundPostingFee(User seller, BicyclePost post) {
@@ -121,8 +139,10 @@ public class InspectionService {
         return InspectionReportResponse.builder()
                 .reportId(report.getReportId())
                 .postId(report.getPost().getPostId())
+                .postTitle(report.getPost().getBicycleName())
                 .inspectorId(report.getInspector().getUserId())
                 .inspectorName(report.getInspector().getFullName())
+                .inspectorEmail(report.getInspector().getEmail())
                 .result(report.getInspectionResult())
                 .overallCondition(report.getOverallCondition())
                 .notes(report.getNotes())
@@ -137,6 +157,7 @@ public class InspectionService {
                 .sellerId(post.getSeller().getUserId())
                 .sellerFullName(post.getSeller().getFullName())
                 .sellerPhoneNumber(post.getSeller().getPhoneNumber())
+                .sellerAvatarUrl(post.getSeller().getAvatarUrl())
                 .brandId(post.getBrand().getBrandId())
                 .brandName(post.getBrand().getBrandName())
                 .categoryId(post.getCategory().getCategoryId())
@@ -174,6 +195,7 @@ public class InspectionService {
                 .postStatus(post.getPostStatus())
                 .thumbnailUrl(thumbnail)
                 .sellerFullName(post.getSeller().getFullName())
+                .sellerAvatarUrl(post.getSeller().getAvatarUrl())
                 .createdAt(post.getCreatedAt())
                 .build();
     }

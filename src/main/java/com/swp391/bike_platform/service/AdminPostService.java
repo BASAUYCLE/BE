@@ -140,6 +140,7 @@ public class AdminPostService {
                 .sellerId(post.getSeller().getUserId())
                 .sellerFullName(post.getSeller().getFullName())
                 .sellerPhoneNumber(post.getSeller().getPhoneNumber())
+                .sellerAvatarUrl(post.getSeller().getAvatarUrl())
                 .brandId(post.getBrand().getBrandId())
                 .brandName(post.getBrand().getBrandName())
                 .categoryId(post.getCategory().getCategoryId())

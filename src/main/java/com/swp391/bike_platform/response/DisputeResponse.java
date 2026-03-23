@@ -13,9 +13,16 @@ public class DisputeResponse {
     private String postTitle;
     private Long buyerId;
     private String buyerName;
+    private String buyerAvatarUrl;
     private Long sellerId;
     private String sellerName;
+    private String sellerAvatarUrl;
     private Long inspectorId;
+    private String inspectorName;
+    private String inspectorEmail;
+    private Long resolvedById;
+    private String resolvedByName;
+    private String resolvedByEmail;
     private String status;
     private String reason;
     private List<String> proofImages;

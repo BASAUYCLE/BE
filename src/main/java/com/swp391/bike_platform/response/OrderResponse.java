@@ -15,8 +15,10 @@ public class OrderResponse {
     private String postTitle;
     private Long buyerId;
     private String buyerName;
+    private String buyerAvatarUrl;
     private Long sellerId;
     private String sellerName;
+    private String sellerAvatarUrl;
     private Long addressId;
     private String fullAddress;
     private BigDecimal totalPrice;

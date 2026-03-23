@@ -22,5 +22,6 @@ public class BicyclePostSummaryResponse {
     private String postStatus;
     private String thumbnailUrl;
     private String sellerFullName;
+    private String sellerAvatarUrl;
     private LocalDateTime createdAt;
 }

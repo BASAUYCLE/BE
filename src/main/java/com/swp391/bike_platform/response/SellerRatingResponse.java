@@ -9,6 +9,7 @@ import lombok.*;
 public class SellerRatingResponse {
     private Long sellerId;
     private String sellerName;
+    private String sellerAvatarUrl;
     private Double averageRating;
     private Long totalReviews;
 }

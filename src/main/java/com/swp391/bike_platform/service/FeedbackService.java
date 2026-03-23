@@ -133,6 +133,7 @@ public class FeedbackService {
         return SellerRatingResponse.builder()
                 .sellerId(sellerId)
                 .sellerName(seller.getFullName())
+                .sellerAvatarUrl(seller.getAvatarUrl())
                 .averageRating(avgRating != null ? Math.round(avgRating * 10.0) / 10.0 : 0.0)
                 .totalReviews(totalReviews)
                 .build();
@@ -146,8 +147,10 @@ public class FeedbackService {
                 .orderId(feedback.getOrder().getOrderId())
                 .buyerId(feedback.getBuyer().getUserId())
                 .buyerName(feedback.getBuyer().getFullName())
+                .buyerAvatarUrl(feedback.getBuyer().getAvatarUrl())
                 .sellerId(feedback.getSeller().getUserId())
                 .sellerName(feedback.getSeller().getFullName())
+                .sellerAvatarUrl(feedback.getSeller().getAvatarUrl())
                 .postId(feedback.getPost().getPostId())
                 .postTitle(feedback.getPost().getBicycleName())
                 .rating(feedback.getRating())

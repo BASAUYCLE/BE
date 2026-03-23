@@ -20,6 +20,7 @@ public class BicyclePostResponse {
     private Long sellerId;
     private String sellerFullName;
     private String sellerPhoneNumber;
+    private String sellerAvatarUrl;
 
     // Brand info
     private Long brandId;

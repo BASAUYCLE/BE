@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 import com.swp391.bike_platform.enums.ErrorCode;
 import com.swp391.bike_platform.exception.AppException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -84,12 +86,25 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        if (request.getFullName() != null)
-            user.setFullName(request.getFullName());
         if (request.getPhoneNumber() != null)
             user.setPhoneNumber(request.getPhoneNumber());
 
         return toUserResponse(userRepository.save(user));
+    }
+
+    /**
+     * Upload avatar image to Cloudinary and save URL to user
+     */
+    public UserResponse uploadAvatar(String email, MultipartFile file) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        try {
+            String avatarUrl = cloudinaryService.uploadImage(file);
+            user.setAvatarUrl(avatarUrl);
+            return toUserResponse(userRepository.save(user));
+        } catch (IOException e) {
+            throw new AppException(ErrorCode.IMAGE_UPLOAD_FAILED);
+        }
     }
 
     public void deleteUser(Long id) {
@@ -165,6 +180,7 @@ public class UserService {
                 .cccdFront(user.getCccdFront())
                 .cccdBack(user.getCccdBack())
                 .isVerified(user.getIsVerified())
+                .avatarUrl(user.getAvatarUrl())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();

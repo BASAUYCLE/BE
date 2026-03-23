@@ -192,6 +192,14 @@ public class DisputeService {
                 .collect(Collectors.toList());
     }
 
+    // ─────────────────── GET /disputes/inspector/review-history (INSPECTOR)
+    // ───────────────────
+    public List<DisputeResponse> getResolvedDisputesByInspector(Long inspectorId) {
+        return disputeRepository.findResolvedByInspectorPostApprover(inspectorId).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
     // ─────────────────── PUT /disputes/{id}/inspector-note ───────────────────
     @Transactional
     public DisputeResponse addInspectorNote(Long disputeId, Long inspectorId, NoteRequest request) {
@@ -414,8 +422,10 @@ public class DisputeService {
                 .postTitle(dispute.getOrder().getPost().getBicycleName())
                 .buyerId(dispute.getBuyer().getUserId())
                 .buyerName(dispute.getBuyer().getFullName())
+                .buyerAvatarUrl(dispute.getBuyer().getAvatarUrl())
                 .sellerId(dispute.getOrder().getPost().getSeller().getUserId())
                 .sellerName(dispute.getOrder().getPost().getSeller().getFullName())
+                .sellerAvatarUrl(dispute.getOrder().getPost().getSeller().getAvatarUrl())
                 .status(dispute.getStatus())
                 .reason(dispute.getReason())
                 .proofImages(dispute.getProofImages() != null && !dispute.getProofImages().isEmpty()
@@ -432,7 +442,14 @@ public class DisputeService {
                 .updatedAt(dispute.getUpdatedAt());
 
         if (dispute.getInspector() != null) {
-            builder.inspectorId(dispute.getInspector().getUserId());
+            builder.inspectorId(dispute.getInspector().getUserId())
+                    .inspectorName(dispute.getInspector().getFullName())
+                    .inspectorEmail(dispute.getInspector().getEmail());
+        }
+        if (dispute.getResolvedBy() != null) {
+            builder.resolvedById(dispute.getResolvedBy().getUserId())
+                    .resolvedByName(dispute.getResolvedBy().getFullName())
+                    .resolvedByEmail(dispute.getResolvedBy().getEmail());
         }
         return builder.build();
     }
