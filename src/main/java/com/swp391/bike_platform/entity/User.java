@@ -48,6 +48,9 @@ public class User {
     @Column(name = "is_verified", length = 20)
     private String isVerified;
 
+    @Column(name = "avatar_url", columnDefinition = "NVARCHAR(MAX)")
+    private String avatarUrl;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

@@ -18,4 +18,7 @@ public interface InspectionReportRepository extends JpaRepository<InspectionRepo
 
     // Kiểm tra post đã có report chưa
     boolean existsByPost_PostId(Long postId);
+
+    // Admin: Lấy toàn bộ lịch sử duyệt
+    List<InspectionReport> findAllByOrderByCreatedAtDesc();
 }

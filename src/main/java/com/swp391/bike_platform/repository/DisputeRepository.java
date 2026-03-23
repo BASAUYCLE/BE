@@ -40,4 +40,11 @@ public interface DisputeRepository extends JpaRepository<Dispute, Long> {
                         "(SELECT ir.post.postId FROM InspectionReport ir WHERE ir.inspector.userId = :inspectorId) " +
                         "ORDER BY d.createdAt DESC")
         List<Dispute> findByInspectorPostApprover(@Param("inspectorId") Long inspectorId);
+
+        // Inspector: get resolved/rejected disputes for posts they approved
+        @Query("SELECT d FROM Dispute d WHERE d.order.post.postId IN " +
+                        "(SELECT ir.post.postId FROM InspectionReport ir WHERE ir.inspector.userId = :inspectorId) " +
+                        "AND d.status IN ('RESOLVED', 'REJECTED') " +
+                        "ORDER BY d.resolvedAt DESC")
+        List<Dispute> findResolvedByInspectorPostApprover(@Param("inspectorId") Long inspectorId);
 }

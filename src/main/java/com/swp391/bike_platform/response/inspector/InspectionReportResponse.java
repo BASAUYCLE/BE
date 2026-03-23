@@ -15,8 +15,10 @@ public class InspectionReportResponse {
 
     private Long reportId;
     private Long postId;
+    private String postTitle;
     private Long inspectorId;
     private String inspectorName;
+    private String inspectorEmail;
     private String result; // PASS or FAIL
     private String overallCondition; // Excellent, Good, Fair, Poor
     private String notes;

@@ -21,6 +21,7 @@ public class UserResponse {
     private String cccdFront;
     private String cccdBack;
     private String isVerified;
+    private String avatarUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
