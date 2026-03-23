@@ -50,6 +50,10 @@ public class SecurityConfig {
                                                 .requestMatchers("/users/myinfo", "/users/myinfo/**").authenticated()
                                                 .requestMatchers("/api/upload/**").authenticated()
 
+                                                // System Config - Public GET, Admin for PUT
+                                                .requestMatchers(HttpMethod.GET, "/admin/config", "/admin/config/**")
+                                                .permitAll()
+
                                                 // Admin only endpoints
                                                 .requestMatchers("/admin/**")
                                                 .hasRole(UserEnum.ADMIN.name())
