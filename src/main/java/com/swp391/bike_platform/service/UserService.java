@@ -180,9 +180,9 @@ public class UserService {
                 .cccdFront(user.getCccdFront())
                 .cccdBack(user.getCccdBack())
                 .isVerified(user.getIsVerified())
-                .avatarUrl(user.getAvatarUrl())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
+                .avatarUrl(user.getAvatarUrl())
                 .build();
     }
 }
