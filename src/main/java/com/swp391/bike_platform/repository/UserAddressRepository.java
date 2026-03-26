@@ -18,6 +18,8 @@ public interface UserAddressRepository extends JpaRepository<UserAddress, Long> 
 
     Optional<UserAddress> findFirstByUser_UserId(Long userId);
 
+    Optional<UserAddress> findFirstByUser_UserIdAndAddressIdNot(Long userId, Long addressId);
+
     @Modifying
     @Query("UPDATE UserAddress a SET a.isDefault = false WHERE a.user.userId = :userId")
     void clearDefaultByUserId(@Param("userId") Long userId);

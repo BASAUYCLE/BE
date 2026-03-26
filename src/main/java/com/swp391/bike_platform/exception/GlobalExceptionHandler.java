@@ -2,6 +2,7 @@ package com.swp391.bike_platform.exception;
 
 import com.swp391.bike_platform.response.ApiResponse;
 import com.swp391.bike_platform.enums.ErrorCode;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -20,6 +21,18 @@ public class GlobalExceptionHandler {
 
         apiResponse.setCode(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode());
         apiResponse.setMessage(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage());
+
+        return ResponseEntity.badRequest().body(apiResponse);
+    }
+
+    @ExceptionHandler(value = DataIntegrityViolationException.class)
+    ResponseEntity<ApiResponse<Object>> handlingDataIntegrityViolationException(
+            DataIntegrityViolationException exception) {
+        log.error("DataIntegrityViolationException caught: ", exception);
+        ApiResponse<Object> apiResponse = new ApiResponse<>();
+
+        apiResponse.setCode(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode());
+        apiResponse.setMessage("Database constraint violation: This record is in use and cannot be modified/deleted.");
 
         return ResponseEntity.badRequest().body(apiResponse);
     }

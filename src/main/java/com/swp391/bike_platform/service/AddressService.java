@@ -6,6 +6,7 @@ import com.swp391.bike_platform.entity.UserAddress;
 import com.swp391.bike_platform.enums.ErrorCode;
 import com.swp391.bike_platform.exception.AppException;
 import com.swp391.bike_platform.repository.CommuneRepository;
+import com.swp391.bike_platform.repository.OrderRepository;
 import com.swp391.bike_platform.repository.UserAddressRepository;
 import com.swp391.bike_platform.request.AddressRequest;
 import com.swp391.bike_platform.response.AddressResponse;
@@ -22,6 +23,7 @@ public class AddressService {
 
     private final UserAddressRepository addressRepository;
     private final CommuneRepository communeRepository;
+    private final OrderRepository orderRepository;
     private final UserService userService;
 
     /**
@@ -111,12 +113,17 @@ public class AddressService {
         UserAddress address = addressRepository.findByAddressIdAndUser_UserId(addressId, userId)
                 .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
 
+        // Check if address is being used in any order
+        if (orderRepository.existsByAddress_AddressId(addressId)) {
+            throw new AppException(ErrorCode.ADDRESS_IN_USE);
+        }
+
         boolean wasDefault = Boolean.TRUE.equals(address.getIsDefault());
         addressRepository.delete(address);
 
         // If deleted address was default, set another one as default
         if (wasDefault) {
-            addressRepository.findFirstByUser_UserId(userId)
+            addressRepository.findFirstByUser_UserIdAndAddressIdNot(userId, addressId)
                     .ifPresent(a -> {
                         a.setIsDefault(true);
                         addressRepository.save(a);

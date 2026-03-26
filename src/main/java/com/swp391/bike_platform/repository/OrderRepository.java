@@ -30,4 +30,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     // Auto-complete: find DELIVERED orders where deliveredAt is before the cutoff
     @Query("SELECT o FROM Order o WHERE o.orderStatus = :status AND o.deliveredAt <= :cutoff")
     List<Order> findByStatusAndDeliveredAtBefore(@Param("status") String status, @Param("cutoff") LocalDateTime cutoff);
+
+    boolean existsByAddress_AddressId(Long addressId);
 }

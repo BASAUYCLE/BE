@@ -82,6 +82,7 @@ public enum ErrorCode {
             HttpStatus.BAD_REQUEST),
     UNAUTHORIZED_INSPECTOR(1074, "You are not the inspector who approved this post", HttpStatus.FORBIDDEN),
     INSPECTION_REPORT_NOT_FOUND(1075, "Inspection report not found for this post", HttpStatus.NOT_FOUND),
+    ADDRESS_IN_USE(1086, "Cannot delete address that is linked to an order", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatus statusCode) {
