@@ -169,6 +169,8 @@ public class TransactionService {
                 .status(t.getStatus())
                 .description(t.getDescription())
                 .vnpBankCode(t.getVnpBankCode())
+                .vnpTxnRef(t.getVnpTxnRef())
+                .vnpTransactionNo(t.getVnpTransactionNo())
                 .postId(t.getPost() != null ? t.getPost().getPostId() : null)
                 .userId(t.getUser() != null ? t.getUser().getUserId() : null)
                 .userEmail(t.getUser() != null ? t.getUser().getEmail() : null)

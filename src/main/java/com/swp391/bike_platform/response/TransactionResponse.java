@@ -16,6 +16,8 @@ public class TransactionResponse {
     private String status;
     private String description;
     private String vnpBankCode;
+    private String vnpTxnRef;
+    private String vnpTransactionNo;
     private Long postId;
     private Long userId;
     private String userEmail;
