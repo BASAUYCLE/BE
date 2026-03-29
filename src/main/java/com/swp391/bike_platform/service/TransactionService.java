@@ -9,6 +9,7 @@ import com.swp391.bike_platform.enums.TransactionStatus;
 import com.swp391.bike_platform.enums.TransactionType;
 import com.swp391.bike_platform.exception.AppException;
 import com.swp391.bike_platform.repository.TransactionRepository;
+import com.swp391.bike_platform.request.WithdrawRequest;
 import com.swp391.bike_platform.response.TransactionResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -50,7 +51,6 @@ public class TransactionService {
         // Generate unique txn ref
         String txnRef = System.currentTimeMillis() + "_" + userId;
 
-        // Create PENDING transaction
         Transaction transaction = Transaction.builder()
                 .wallet(wallet)
                 .user(wallet.getUser())
@@ -60,6 +60,9 @@ public class TransactionService {
                 .vnpTxnRef(txnRef)
                 .description("+" + formatAmount(amount) + " VND - Nạp tiền ví")
                 .build();
+        if (transaction == null) {
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
         transactionRepository.save(transaction);
 
         // Create VNPay URL
@@ -128,8 +131,78 @@ public class TransactionService {
      * Get single transaction by id
      */
     public TransactionResponse getById(Long transactionId) {
+        if (transactionId == null) {
+            throw new AppException(ErrorCode.TRANSACTION_NOT_FOUND);
+        }
         Transaction t = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
+        return toResponse(t);
+    }
+
+    /**
+     * Request a withdrawal (User)
+     */
+    @Transactional
+    public TransactionResponse requestWithdrawal(Long userId, WithdrawRequest request) {
+        Wallet wallet = walletService.getOrCreateWallet(userId);
+
+        // Deduct balance first
+        walletService.deductBalance(wallet.getWalletId(), request.getAmount());
+
+        // Create PENDING withdrawal transaction
+        Transaction transaction = Transaction.builder()
+                .wallet(wallet)
+                .user(wallet.getUser())
+                .transactionType(TransactionType.WITHDRAW.name())
+                .amount(request.getAmount())
+                .status(TransactionStatus.PENDING.name())
+                .bankName(request.getBankName())
+                .bankAccountNumber(request.getBankAccountNumber())
+                .bankAccountHolder(request.getBankAccountHolder())
+                .description("-" + formatAmount(request.getAmount()) + " VND - Rút tiền về " + request.getBankName())
+                .build();
+
+        transactionRepository.save(transaction);
+        return toResponse(transaction);
+    }
+
+    /**
+     * Approve withdrawal (Admin)
+     */
+    @Transactional
+    public TransactionResponse approveWithdrawal(Long transactionId) {
+        Transaction t = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
+
+        if (!TransactionType.WITHDRAW.name().equals(t.getTransactionType()) ||
+                !TransactionStatus.PENDING.name().equals(t.getStatus())) {
+            throw new AppException(ErrorCode.WITHDRAW_INVALID_STATUS);
+        }
+
+        t.setStatus(TransactionStatus.SUCCESS.name());
+        transactionRepository.save(t);
+        return toResponse(t);
+    }
+
+    /**
+     * Reject withdrawal (Admin)
+     */
+    @Transactional
+    public TransactionResponse rejectWithdrawal(Long transactionId) {
+        Transaction t = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
+
+        if (!TransactionType.WITHDRAW.name().equals(t.getTransactionType()) ||
+                !TransactionStatus.PENDING.name().equals(t.getStatus())) {
+            throw new AppException(ErrorCode.WITHDRAW_INVALID_STATUS);
+        }
+
+        t.setStatus(TransactionStatus.FAILED.name());
+
+        // Refund balance to user
+        walletService.addBalance(t.getWallet().getWalletId(), t.getAmount());
+
+        transactionRepository.save(t);
         return toResponse(t);
     }
 
@@ -175,6 +248,9 @@ public class TransactionService {
                 .userId(t.getUser() != null ? t.getUser().getUserId() : null)
                 .userEmail(t.getUser() != null ? t.getUser().getEmail() : null)
                 .userFullName(t.getUser() != null ? t.getUser().getFullName() : null)
+                .bankName(t.getBankName())
+                .bankAccountNumber(t.getBankAccountNumber())
+                .bankAccountHolder(t.getBankAccountHolder())
                 .createdAt(t.getCreatedAt())
                 .build();
     }

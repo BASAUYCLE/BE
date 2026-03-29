@@ -8,5 +8,6 @@ public enum TransactionType {
     POSTING_FEE,
     PAY_REMAINING,
     DISPUTE_REFUND,
-    RELEASE_MONEY
+    RELEASE_MONEY,
+    WITHDRAW
 }

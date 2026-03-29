@@ -1,10 +1,12 @@
 package com.swp391.bike_platform.controller;
 
 import com.swp391.bike_platform.entity.User;
+import com.swp391.bike_platform.request.WithdrawRequest;
 import com.swp391.bike_platform.response.ApiResponse;
 import com.swp391.bike_platform.response.TransactionResponse;
 import com.swp391.bike_platform.service.TransactionService;
 import com.swp391.bike_platform.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -38,6 +40,20 @@ public class TransactionController {
     public ApiResponse<TransactionResponse> getById(@PathVariable Long transactionId) {
         return ApiResponse.<TransactionResponse>builder()
                 .result(transactionService.getById(transactionId))
+                .build();
+    }
+
+    /**
+     * POST /transactions/withdraw — Yêu cầu rút tiền
+     */
+    @PostMapping("/withdraw")
+    public ApiResponse<TransactionResponse> withdraw(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody @Valid WithdrawRequest request) {
+        User user = userService.getUserEntityByEmail(jwt.getSubject());
+        return ApiResponse.<TransactionResponse>builder()
+                .result(transactionService.requestWithdrawal(user.getUserId(), request))
+                .message("Withdrawal request created and pending approval")
                 .build();
     }
 }
