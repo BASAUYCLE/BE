@@ -58,7 +58,7 @@ public class TransactionService {
                 .amount(amount)
                 .status(TransactionStatus.PENDING.name())
                 .vnpTxnRef(txnRef)
-                .description("+" + formatAmount(amount) + " VND - Nạp tiền ví")
+                .description("+" + formatAmount(amount) + " VND - Wallet Top-up")
                 .build();
         if (transaction == null) {
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
@@ -69,7 +69,7 @@ public class TransactionService {
         return vnPayService.createPaymentUrl(
                 amount.longValue(),
                 txnRef,
-                "Nap tien vi BaSauCycle",
+                "BaSauCycle Wallet Top-up",
                 ipAddress);
     }
 
@@ -159,7 +159,7 @@ public class TransactionService {
                 .bankName(request.getBankName())
                 .bankAccountNumber(request.getBankAccountNumber())
                 .bankAccountHolder(request.getBankAccountHolder())
-                .description("-" + formatAmount(request.getAmount()) + " VND - Rút tiền về " + request.getBankName())
+                .description("-" + formatAmount(request.getAmount()) + " VND - Withdrawal to " + request.getBankName())
                 .build();
 
         transactionRepository.save(transaction);

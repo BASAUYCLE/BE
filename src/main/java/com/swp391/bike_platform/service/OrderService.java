@@ -97,7 +97,7 @@ public class OrderService {
             transactionService.createOrderTransaction(
                     buyerWallet, buyerWallet.getUser(), post,
                     TransactionType.PURCHASE, totalPrice,
-                    formatDescription("-", totalPrice, "Thanh toán đơn #" + order.getOrderId()));
+                    formatDescription("-", totalPrice, "Payment for Order #" + order.getOrderId()));
         } else {
             // Deposit only
             BigDecimal depositRate = systemConfigService.getDepositRate()
@@ -120,7 +120,7 @@ public class OrderService {
             transactionService.createOrderTransaction(
                     buyerWallet, buyerWallet.getUser(), post,
                     TransactionType.DEPOSIT, depositAmount,
-                    formatDescription("-", depositAmount, "Đặt cọc đơn #" + order.getOrderId()));
+                    formatDescription("-", depositAmount, "Deposit for Order #" + order.getOrderId()));
         }
 
         // Update post status
@@ -242,7 +242,7 @@ public class OrderService {
         transactionService.createOrderTransaction(
                 buyerWallet, buyerWallet.getUser(), order.getPost(),
                 TransactionType.PAY_REMAINING, remaining,
-                formatDescription("-", remaining, "Thanh toán phần còn lại đơn #" + orderId));
+                formatDescription("-", remaining, "Remaining balance payment for Order #" + orderId));
 
         order.setOrderStatus(OrderStatus.PAID.name());
         order.setDepositAmount(order.getTotalPrice()); // Update deposit as platform now holds full payment
@@ -286,7 +286,7 @@ public class OrderService {
             transactionService.createOrderTransaction(
                     buyerWallet, buyerWallet.getUser(), order.getPost(),
                     TransactionType.REFUND, refundAmount,
-                    formatDescription("+", refundAmount, "Hoàn tiền đơn #" + orderId));
+                    formatDescription("+", refundAmount, "Refund for Order #" + orderId));
 
             log.info("Order #{} cancelled (PAID) by {} {} — refunded full {} to buyer", orderId,
                     isBuyer ? "buyer" : "seller", userId, refundAmount);
@@ -303,7 +303,8 @@ public class OrderService {
                 transactionService.createOrderTransaction(
                         sellerWallet, sellerWallet.getUser(), order.getPost(),
                         TransactionType.REFUND, depositAmount,
-                        formatDescription("+", depositAmount, "Nhận tiền cọc đơn #" + orderId + " (buyer hủy)"));
+                        formatDescription("+", depositAmount,
+                                "Deposit received for Order #" + orderId + " (Buyer cancelled)"));
 
                 log.info("Order #{} cancelled (DEPOSITED) by buyer {} — deposit {} transferred to seller", orderId,
                         userId, depositAmount);
@@ -315,7 +316,7 @@ public class OrderService {
                 transactionService.createOrderTransaction(
                         buyerWallet, buyerWallet.getUser(), order.getPost(),
                         TransactionType.REFUND, depositAmount,
-                        formatDescription("+", depositAmount, "Hoàn tiền cọc đơn #" + orderId + " (seller hủy)"));
+                        formatDescription("+", depositAmount, "Refund for Order #" + orderId + " (Seller cancelled)"));
 
                 log.info("Order #{} cancelled (DEPOSITED) by seller {} — deposit {} refunded to buyer", orderId, userId,
                         depositAmount);
@@ -409,7 +410,7 @@ public class OrderService {
                 sellerWallet, sellerWallet.getUser(), order.getPost(),
                 TransactionType.RELEASE_MONEY, sellerAmount,
                 formatDescription("+", sellerAmount,
-                        "Nhận tiền bán đơn #" + order.getOrderId()));
+                        "Sales proceeds for Order #" + order.getOrderId()));
 
         order.setOrderStatus(OrderStatus.COMPLETED.name());
         orderRepository.save(order);
