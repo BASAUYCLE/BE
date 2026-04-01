@@ -451,6 +451,7 @@ public class OrderService {
                 .buyerId(order.getBuyer().getUserId())
                 .buyerName(order.getBuyer().getFullName())
                 .buyerAvatarUrl(order.getBuyer().getAvatarUrl())
+                .buyerPhoneNumber(order.getBuyer().getPhoneNumber())
                 .sellerId(order.getPost().getSeller().getUserId())
                 .sellerName(order.getPost().getSeller().getFullName())
                 .sellerAvatarUrl(order.getPost().getSeller().getAvatarUrl())

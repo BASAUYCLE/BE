@@ -16,6 +16,7 @@ public class OrderResponse {
     private Long buyerId;
     private String buyerName;
     private String buyerAvatarUrl;
+    private String buyerPhoneNumber;
     private Long sellerId;
     private String sellerName;
     private String sellerAvatarUrl;
