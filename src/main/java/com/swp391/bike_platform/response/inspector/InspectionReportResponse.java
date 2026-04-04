@@ -20,7 +20,19 @@ public class InspectionReportResponse {
     private String inspectorName;
     private String inspectorEmail;
     private String result; // PASS or FAIL
-    private String overallCondition; // Excellent, Good, Fair, Poor
+    private String overallCondition; // EXCELLENT, GOOD, FAIR, POOR
+
+    // 6 tiêu chí chấm điểm
+    private Integer colorScore;
+    private Integer frameScore;
+    private Integer groupsetScore;
+    private Integer brakeScore;
+    private Integer controlScore;
+    private Integer wheelScore;
+
+    // Phần trăm tình trạng
+    private Double conditionPercent;
+
     private String notes;
     private String postStatus; // AVAILABLE or REJECTED
     private LocalDateTime createdAt;

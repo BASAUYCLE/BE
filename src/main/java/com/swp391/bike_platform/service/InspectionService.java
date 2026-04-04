@@ -48,12 +48,15 @@ public class InspectionService {
     }
 
     /**
-     * Inspector nộp kết quả kiểm định
-     * - PASS -> post status = AVAILABLE
-     * - FAIL -> post status = REJECTED
+     * Inspector nộp kết quả kiểm định với 6 tiêu chí chấm điểm.
+     * BE tự tính conditionPercent, gán nhãn overallCondition, xác định PASS/FAIL.
+     * Hoàn phí đăng bài cho seller trong mọi trường hợp (cả PASS lẫn FAIL).
      */
     @Transactional
     public InspectionReportResponse submitInspection(Long postId, InspectionRequest request, String inspectorEmail) {
+        // Validate điểm chỉ cho phép 0, 3, 7, 10
+        validateScores(request);
+
         // Tìm post
         BicyclePost post = bicyclePostRepository.findById(postId)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_EXISTED));
@@ -66,14 +69,19 @@ public class InspectionService {
         User inspector = userRepository.findByEmail(inspectorEmail)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        // Validate result
-        String resultStr = request.getResult().toUpperCase();
-        InspectionResult result;
-        try {
-            result = InspectionResult.valueOf(resultStr);
-        } catch (IllegalArgumentException e) {
-            throw new AppException(ErrorCode.MISSING_REQUIRED_FIELD);
+        // Tính conditionPercent theo trọng số
+        double conditionPercent = calculateConditionPercent(request);
+
+        // Xe cũ không thể đạt 100% — tự động trừ xuống 99%
+        if (conditionPercent >= 100.0) {
+            conditionPercent = 99.0;
         }
+
+        // Gán nhãn overallCondition
+        String overallCondition = determineOverallCondition(conditionPercent);
+
+        // Xác định PASS/FAIL
+        InspectionResult result = determineResult(conditionPercent, request.getFrameScore(), request.getBrakeScore());
 
         // Update post status
         String newPostStatus = (result == InspectionResult.PASS) ? PostStatus.AVAILABLE.name()
@@ -86,20 +94,80 @@ public class InspectionService {
                 .post(post)
                 .inspector(inspector)
                 .inspectionResult(result.name())
-                .overallCondition(request.getOverallCondition())
+                .overallCondition(overallCondition)
+                .colorScore(request.getColorScore())
+                .frameScore(request.getFrameScore())
+                .groupsetScore(request.getGroupsetScore())
+                .brakeScore(request.getBrakeScore())
+                .controlScore(request.getControlScore())
+                .wheelScore(request.getWheelScore())
+                .conditionPercent(conditionPercent)
                 .notes(request.getNotes())
                 .build();
 
         InspectionReport savedReport = inspectionReportRepository.save(report);
 
-        // Hoàn phí đăng bài nếu Inspector đánh FAIL
-        if (result == InspectionResult.FAIL) {
-            refundPostingFee(post.getSeller(), post);
-        }
+        // Hoàn phí đăng bài cho seller (bất kể PASS hay FAIL)
+        refundPostingFee(post.getSeller(), post);
 
-        log.info("Inspection submitted for post {}: result={}, newStatus={}", postId, result, newPostStatus);
+        log.info("Inspection submitted for post {}: result={}, conditionPercent={}%, overallCondition={}, newStatus={}",
+                postId, result, conditionPercent, overallCondition, newPostStatus);
 
         return toReportResponse(savedReport, newPostStatus);
+    }
+
+    /**
+     * Validate điểm kiểm định: chỉ cho phép 0, 3, 7, 10.
+     * 10 = Như mới, không có dấu hiệu sử dụng nhiều
+     *  7 = Nguyên bản, có dấu hiệu sử dụng nhẹ
+     *  3 = Có dấu hiệu thay thế hoặc chỉnh sửa
+     *  0 = Hư hỏng nặng, khả năng sử dụng thấp
+     */
+    private void validateScores(InspectionRequest request) {
+        java.util.Set<Integer> allowedScores = java.util.Set.of(0, 3, 7, 10);
+
+        if (!allowedScores.contains(request.getColorScore())
+                || !allowedScores.contains(request.getFrameScore())
+                || !allowedScores.contains(request.getGroupsetScore())
+                || !allowedScores.contains(request.getBrakeScore())
+                || !allowedScores.contains(request.getControlScore())
+                || !allowedScores.contains(request.getWheelScore())) {
+            throw new AppException(ErrorCode.INVALID_INSPECTION_SCORE);
+        }
+    }
+
+    /**
+     * Tính phần trăm tình trạng xe theo trọng số 6 tiêu chí.
+     * Công thức: (color×0.10 + frame×0.30 + groupset×0.25 + brake×0.15 + control×0.10 + wheel×0.10) × 10
+     */
+    private double calculateConditionPercent(InspectionRequest request) {
+        return (request.getColorScore() * 0.10
+                + request.getFrameScore() * 0.30
+                + request.getGroupsetScore() * 0.25
+                + request.getBrakeScore() * 0.15
+                + request.getControlScore() * 0.10
+                + request.getWheelScore() * 0.10) * 10;
+    }
+
+    /**
+     * Gán nhãn tình trạng xe dựa trên conditionPercent.
+     */
+    private String determineOverallCondition(double conditionPercent) {
+        if (conditionPercent >= 90) return "EXCELLENT";
+        if (conditionPercent >= 70) return "GOOD";
+        if (conditionPercent >= 50) return "FAIR";
+        return "POOR";
+    }
+
+    /**
+     * Xác định kết quả kiểm định.
+     * Auto FAIL nếu: conditionPercent < 50 HOẶC frameScore == 0 HOẶC brakeScore == 0
+     */
+    private InspectionResult determineResult(double conditionPercent, int frameScore, int brakeScore) {
+        if (conditionPercent < 50 || frameScore == 0 || brakeScore == 0) {
+            return InspectionResult.FAIL;
+        }
+        return InspectionResult.PASS;
     }
 
     /**
@@ -132,7 +200,7 @@ public class InspectionService {
         transactionService.createOrderTransaction(
                 sellerWallet, seller, post,
                 TransactionType.REFUND, postingFee,
-                "+" + TransactionService.formatAmount(postingFee) + " VND - Hoàn phí đăng bài (kiểm định không đạt)");
+                "+" + TransactionService.formatAmount(postingFee) + " VND - Hoàn phí đăng bài (kiểm định hoàn tất)");
     }
 
     private InspectionReportResponse toReportResponse(InspectionReport report, String postStatus) {
@@ -145,6 +213,13 @@ public class InspectionService {
                 .inspectorEmail(report.getInspector().getEmail())
                 .result(report.getInspectionResult())
                 .overallCondition(report.getOverallCondition())
+                .colorScore(report.getColorScore())
+                .frameScore(report.getFrameScore())
+                .groupsetScore(report.getGroupsetScore())
+                .brakeScore(report.getBrakeScore())
+                .controlScore(report.getControlScore())
+                .wheelScore(report.getWheelScore())
+                .conditionPercent(report.getConditionPercent())
                 .notes(report.getNotes())
                 .postStatus(postStatus)
                 .createdAt(report.getCreatedAt())

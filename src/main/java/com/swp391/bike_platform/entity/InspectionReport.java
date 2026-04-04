@@ -28,13 +28,36 @@ public class InspectionReport {
     @JoinColumn(name = "inspector_id", nullable = false)
     private User inspector;
 
-    // PASS or FAIL
+    // PASS or FAIL (do BE tự tính)
     @Column(name = "inspection_result", nullable = false, length = 20)
     private String inspectionResult;
 
-    // Excellent, Good, Fair, Poor
+    // EXCELLENT, GOOD, FAIR, POOR (do BE tự gán)
     @Column(name = "overall_condition", length = 50)
     private String overallCondition;
+
+    // 6 tiêu chí chấm điểm (0-10)
+    @Column(name = "color_score", nullable = false)
+    private Integer colorScore;
+
+    @Column(name = "frame_score", nullable = false)
+    private Integer frameScore;
+
+    @Column(name = "groupset_score", nullable = false)
+    private Integer groupsetScore;
+
+    @Column(name = "brake_score", nullable = false)
+    private Integer brakeScore;
+
+    @Column(name = "control_score", nullable = false)
+    private Integer controlScore;
+
+    @Column(name = "wheel_score", nullable = false)
+    private Integer wheelScore;
+
+    // Phần trăm tình trạng xe (tính từ trọng số)
+    @Column(name = "condition_percent", nullable = false)
+    private Double conditionPercent;
 
     // Ghi chú từ Inspector
     @Column(name = "notes", columnDefinition = "NVARCHAR(MAX)")

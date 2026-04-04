@@ -85,6 +85,7 @@ public enum ErrorCode {
     ADDRESS_IN_USE(1086, "Cannot delete address that is linked to an order", HttpStatus.BAD_REQUEST),
     WITHDRAW_INVALID_STATUS(1087, "Withdrawal is not in PENDING status", HttpStatus.BAD_REQUEST),
     WITHDRAW_MIN_AMOUNT(1088, "Minimum withdrawal amount is 50,000 VND", HttpStatus.BAD_REQUEST),
+    INVALID_INSPECTION_SCORE(1089, "Inspection score must be 0, 3, 7, or 10", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatus statusCode) {

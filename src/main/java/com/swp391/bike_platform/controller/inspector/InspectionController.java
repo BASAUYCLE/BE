@@ -5,6 +5,7 @@ import com.swp391.bike_platform.response.ApiResponse;
 import com.swp391.bike_platform.response.BicyclePostSummaryResponse;
 import com.swp391.bike_platform.response.inspector.InspectionReportResponse;
 import com.swp391.bike_platform.service.InspectionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -32,12 +33,12 @@ public class InspectionController {
 
     /**
      * POST /inspection/{postId}/submit
-     * Inspector nộp kết quả kiểm định
+     * Inspector nộp kết quả kiểm định với 6 tiêu chí chấm điểm (0-10)
      */
     @PostMapping("/{postId}/submit")
     public ApiResponse<InspectionReportResponse> submitInspection(
             @PathVariable Long postId,
-            @RequestBody InspectionRequest request,
+            @Valid @RequestBody InspectionRequest request,
             @AuthenticationPrincipal Jwt jwt) {
 
         String inspectorEmail = jwt.getSubject();
