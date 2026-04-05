@@ -248,6 +248,7 @@ public class TransactionService {
                 .userId(t.getUser() != null ? t.getUser().getUserId() : null)
                 .userEmail(t.getUser() != null ? t.getUser().getEmail() : null)
                 .userFullName(t.getUser() != null ? t.getUser().getFullName() : null)
+                .userAvatarUrl(t.getUser() != null ? t.getUser().getAvatarUrl() : null)
                 .bankName(t.getBankName())
                 .bankAccountNumber(t.getBankAccountNumber())
                 .bankAccountHolder(t.getBankAccountHolder())

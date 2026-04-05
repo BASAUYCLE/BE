@@ -22,6 +22,7 @@ public class TransactionResponse {
     private Long userId;
     private String userEmail;
     private String userFullName;
+    private String userAvatarUrl;
     private String bankName;
     private String bankAccountNumber;
     private String bankAccountHolder;

@@ -444,12 +444,14 @@ public class DisputeService {
         if (dispute.getInspector() != null) {
             builder.inspectorId(dispute.getInspector().getUserId())
                     .inspectorName(dispute.getInspector().getFullName())
-                    .inspectorEmail(dispute.getInspector().getEmail());
+                    .inspectorEmail(dispute.getInspector().getEmail())
+                    .inspectorAvatarUrl(dispute.getInspector().getAvatarUrl());
         }
         if (dispute.getResolvedBy() != null) {
             builder.resolvedById(dispute.getResolvedBy().getUserId())
                     .resolvedByName(dispute.getResolvedBy().getFullName())
-                    .resolvedByEmail(dispute.getResolvedBy().getEmail());
+                    .resolvedByEmail(dispute.getResolvedBy().getEmail())
+                    .resolvedByAvatarUrl(dispute.getResolvedBy().getAvatarUrl());
         }
         return builder.build();
     }

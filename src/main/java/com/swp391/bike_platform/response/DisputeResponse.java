@@ -20,9 +20,11 @@ public class DisputeResponse {
     private Long inspectorId;
     private String inspectorName;
     private String inspectorEmail;
+    private String inspectorAvatarUrl;
     private Long resolvedById;
     private String resolvedByName;
     private String resolvedByEmail;
+    private String resolvedByAvatarUrl;
     private String status;
     private String reason;
     private List<String> proofImages;
