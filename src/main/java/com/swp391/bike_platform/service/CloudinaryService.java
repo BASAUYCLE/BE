@@ -147,9 +147,9 @@ public class CloudinaryService {
         // Logo overlay: center, 30% opacity, 200px width
         String logoOverlay = "l_logo_project_cv0djb,o_30,w_200,g_center";
 
-        // Text overlay: white, 50% opacity, bottom-right, Arial 18 bold
+        // Text overlay: Black text with White outline, bottom-right, Arial 18 bold
         String textOverlay = String.format(
-                "l_text:Arial_18_bold:%s,co_white,o_50,g_south_east,x_10,y_10",
+                "l_text:Arial_18_bold:%s/co_black,e_outline:outer:2,co_white,o_70/fl_layer_apply,g_south_east,x_10,y_10",
                 encodedText);
 
         String transform = logoOverlay + "/" + textOverlay;
