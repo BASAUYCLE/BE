@@ -1,5 +1,6 @@
 package com.swp391.bike_platform.service;
 
+import com.swp391.bike_platform.entity.BicycleImage;
 import com.swp391.bike_platform.entity.BicyclePost;
 import com.swp391.bike_platform.entity.InspectionReport;
 import com.swp391.bike_platform.entity.User;
@@ -9,6 +10,7 @@ import com.swp391.bike_platform.enums.InspectionResult;
 import com.swp391.bike_platform.enums.PostStatus;
 import com.swp391.bike_platform.enums.TransactionType;
 import com.swp391.bike_platform.exception.AppException;
+import com.swp391.bike_platform.repository.BicycleImageRepository;
 import com.swp391.bike_platform.repository.BicyclePostRepository;
 import com.swp391.bike_platform.repository.InspectionReportRepository;
 import com.swp391.bike_platform.repository.UserRepository;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,11 +34,13 @@ import java.util.stream.Collectors;
 public class InspectionService {
 
     private final BicyclePostRepository bicyclePostRepository;
+    private final BicycleImageRepository bicycleImageRepository;
     private final InspectionReportRepository inspectionReportRepository;
     private final UserRepository userRepository;
     private final WalletService walletService;
     private final TransactionService transactionService;
     private final SystemConfigService systemConfigService;
+    private final CloudinaryService cloudinaryService;
 
     /**
      * Lấy danh sách bài đăng chờ Inspector kiểm định (status = ADMIN_APPROVED)
@@ -89,6 +94,19 @@ public class InspectionService {
         post.setPostStatus(newPostStatus);
         bicyclePostRepository.save(post);
 
+        // Apply watermark to all images when inspection PASS
+        if (result == InspectionResult.PASS) {
+            List<BicycleImage> images = bicycleImageRepository.findByPost_PostId(postId);
+            LocalDateTime now = LocalDateTime.now();
+            for (BicycleImage img : images) {
+                String watermarkedUrl = cloudinaryService.addWatermark(
+                        img.getImageUrl(), inspector.getFullName(), now);
+                img.setImageUrl(watermarkedUrl);
+            }
+            bicycleImageRepository.saveAll(images);
+            log.info("Watermark applied to {} images for post {}", images.size(), postId);
+        }
+
         // Create inspection report
         InspectionReport report = InspectionReport.builder()
                 .post(post)
@@ -119,9 +137,9 @@ public class InspectionService {
     /**
      * Validate điểm kiểm định: chỉ cho phép 0, 3, 7, 10.
      * 10 = Như mới, không có dấu hiệu sử dụng nhiều
-     *  7 = Nguyên bản, có dấu hiệu sử dụng nhẹ
-     *  3 = Có dấu hiệu thay thế hoặc chỉnh sửa
-     *  0 = Hư hỏng nặng, khả năng sử dụng thấp
+     * 7 = Nguyên bản, có dấu hiệu sử dụng nhẹ
+     * 3 = Có dấu hiệu thay thế hoặc chỉnh sửa
+     * 0 = Hư hỏng nặng, khả năng sử dụng thấp
      */
     private void validateScores(InspectionRequest request) {
         java.util.Set<Integer> allowedScores = java.util.Set.of(0, 3, 7, 10);
@@ -138,7 +156,8 @@ public class InspectionService {
 
     /**
      * Tính phần trăm tình trạng xe theo trọng số 6 tiêu chí.
-     * Công thức: (color×0.10 + frame×0.30 + groupset×0.25 + brake×0.15 + control×0.10 + wheel×0.10) × 10
+     * Công thức: (color×0.10 + frame×0.30 + groupset×0.25 + brake×0.15 +
+     * control×0.10 + wheel×0.10) × 10
      */
     private double calculateConditionPercent(InspectionRequest request) {
         return (request.getColorScore() * 0.10
@@ -153,15 +172,19 @@ public class InspectionService {
      * Gán nhãn tình trạng xe dựa trên conditionPercent.
      */
     private String determineOverallCondition(double conditionPercent) {
-        if (conditionPercent >= 90) return "EXCELLENT";
-        if (conditionPercent >= 70) return "GOOD";
-        if (conditionPercent >= 50) return "FAIR";
+        if (conditionPercent >= 90)
+            return "EXCELLENT";
+        if (conditionPercent >= 70)
+            return "GOOD";
+        if (conditionPercent >= 50)
+            return "FAIR";
         return "POOR";
     }
 
     /**
      * Xác định kết quả kiểm định.
-     * Auto FAIL nếu: conditionPercent < 50 HOẶC frameScore == 0 HOẶC brakeScore == 0
+     * Auto FAIL nếu: conditionPercent < 50 HOẶC frameScore == 0 HOẶC brakeScore ==
+     * 0
      */
     private InspectionResult determineResult(double conditionPercent, int frameScore, int brakeScore) {
         if (conditionPercent < 50 || frameScore == 0 || brakeScore == 0) {

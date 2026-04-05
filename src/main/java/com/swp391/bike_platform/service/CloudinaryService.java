@@ -11,6 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 @Service
@@ -113,5 +117,45 @@ public class CloudinaryService {
         } catch (Exception e) {
             log.error("Cloudinary delete error: {}", e.getMessage(), e);
         }
+    }
+
+    /**
+     * Add watermark to Cloudinary image via URL transformation.
+     * - Logo overlay at center with 30% opacity
+     * - Inspector name + inspection date as white text at bottom-right corner
+     *
+     * @param originalUrl    Original Cloudinary image URL
+     * @param inspectorName  Name of the inspector
+     * @param inspectionDate Date of inspection
+     * @return Watermarked image URL
+     */
+    public String addWatermark(String originalUrl, String inspectorName,
+            LocalDateTime inspectionDate) {
+        if (originalUrl == null || !originalUrl.contains("/upload/")) {
+            return originalUrl;
+        }
+
+        // Format inspection date
+        String dateStr = inspectionDate.format(
+                DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+
+        // Build text content: "Verified by <name> - <date>"
+        String text = String.format("Verified by %s - %s", inspectorName, dateStr);
+        String encodedText = URLEncoder.encode(text, StandardCharsets.UTF_8)
+                .replace("+", "%20");
+
+        // Logo overlay: center, 30% opacity, 200px width
+        String logoOverlay = "l_logo_project_cv0djb,o_30,w_200,g_center";
+
+        // Text overlay: white, 50% opacity, bottom-right, Arial 18 bold
+        String textOverlay = String.format(
+                "l_text:Arial_18_bold:%s,co_white,o_50,g_south_east,x_10,y_10",
+                encodedText);
+
+        String transform = logoOverlay + "/" + textOverlay;
+        String watermarkedUrl = originalUrl.replace("/upload/", "/upload/" + transform + "/");
+
+        log.info("Watermark applied to image: {}", watermarkedUrl);
+        return watermarkedUrl;
     }
 }

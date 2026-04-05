@@ -35,7 +35,7 @@ public class BicyclePostService {
     private final TransactionService transactionService;
     private final SystemConfigService systemConfigService;
 
-    // Statuses visible to public users (Mercari style)
+    // Statuses visible to public users (
     private static final List<String> PUBLIC_STATUSES = Arrays.asList(
             PostStatus.AVAILABLE.name(),
             PostStatus.PROCESSING.name(),
@@ -193,7 +193,7 @@ public class BicyclePostService {
 
         // Check if update is allowed based on status
         if (PostStatus.PENDING.name().equals(currentStatus) || "DRAFTED".equals(currentStatus)) {
-            // Allow full update for PENDING and DRAFTED
+            // Allow full update for DRAFTED
             updateAllFields(post, request);
         } else if (PostStatus.AVAILABLE.name().equals(currentStatus)) {
             // Only allow color, size, description update
