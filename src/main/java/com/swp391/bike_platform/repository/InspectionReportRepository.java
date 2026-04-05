@@ -21,4 +21,11 @@ public interface InspectionReportRepository extends JpaRepository<InspectionRepo
 
     // Admin: Lấy toàn bộ lịch sử duyệt
     List<InspectionReport> findAllByOrderByCreatedAtDesc();
+
+    // Public: Lấy tất cả report theo kết quả (PASS/FAIL)
+    List<InspectionReport> findByInspectionResultOrderByCreatedAtDesc(String inspectionResult);
+
+    // Seller: Lấy report FAIL của bài đăng thuộc seller (theo email)
+    List<InspectionReport> findByInspectionResultAndPost_Seller_EmailOrderByCreatedAtDesc(
+            String inspectionResult, String sellerEmail);
 }
