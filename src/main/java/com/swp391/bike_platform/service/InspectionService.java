@@ -182,8 +182,10 @@ public class InspectionService {
     /**
      * Inspector: Lấy lịch sử duyệt bài của mình
      */
-    public List<InspectionReportResponse> getMyApprovalHistory(Long inspectorId) {
-        return inspectionReportRepository.findByInspector_UserId(inspectorId).stream()
+    public List<InspectionReportResponse> getMyApprovalHistory(String inspectorEmail) {
+        User inspector = userRepository.findByEmail(inspectorEmail)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        return inspectionReportRepository.findByInspector_UserId(inspector.getUserId()).stream()
                 .map(r -> toReportResponse(r, r.getPost().getPostStatus()))
                 .collect(Collectors.toList());
     }
