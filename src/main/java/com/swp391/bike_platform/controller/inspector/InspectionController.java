@@ -46,4 +46,17 @@ public class InspectionController {
                 .result(inspectionService.submitInspection(postId, request, inspectorEmail))
                 .build();
     }
+
+    /**
+     * GET /inspection/reports
+     * Inspector xem toàn bộ lịch sử duyệt bài của mình
+     */
+    @GetMapping("/reports")
+    public ApiResponse<List<InspectionReportResponse>> getMyApprovalHistory(
+            @AuthenticationPrincipal Jwt jwt) {
+        String inspectorEmail = jwt.getSubject();
+        return ApiResponse.<List<InspectionReportResponse>>builder()
+                .result(inspectionService.getMyApprovalHistory(inspectorEmail))
+                .build();
+    }
 }

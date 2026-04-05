@@ -205,10 +205,42 @@ public class InspectionService {
     /**
      * Inspector: Lấy lịch sử duyệt bài của mình
      */
-    public List<InspectionReportResponse> getMyApprovalHistory(Long inspectorId) {
-        return inspectionReportRepository.findByInspector_UserId(inspectorId).stream()
+    public List<InspectionReportResponse> getMyApprovalHistory(String inspectorEmail) {
+        User inspector = userRepository.findByEmail(inspectorEmail)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        return inspectionReportRepository.findByInspector_UserId(inspector.getUserId()).stream()
                 .map(r -> toReportResponse(r, r.getPost().getPostStatus()))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Public: Lấy phiếu kiểm định cho mọi người xem.
+     * - PASS: tất cả mọi người đều xem được.
+     * - FAIL: chỉ người đăng bán xe (seller) mới xem được.
+     *
+     * @param currentUserEmail email của user đang đăng nhập (null nếu anonymous)
+     */
+    public List<InspectionReportResponse> getPublicReports(String currentUserEmail) {
+        // Lấy tất cả report PASS — ai cũng xem được
+        List<InspectionReport> passReports = inspectionReportRepository
+                .findByInspectionResultOrderByCreatedAtDesc(InspectionResult.PASS.name());
+
+        List<InspectionReportResponse> result = passReports.stream()
+                .map(r -> toReportResponse(r, r.getPost().getPostStatus()))
+                .collect(Collectors.toList());
+
+        // Nếu user đã đăng nhập, thêm các report FAIL của bài đăng mà user là seller
+        if (currentUserEmail != null && !currentUserEmail.isBlank()) {
+            List<InspectionReport> failReports = inspectionReportRepository
+                    .findByInspectionResultAndPost_Seller_EmailOrderByCreatedAtDesc(
+                            InspectionResult.FAIL.name(), currentUserEmail);
+
+            failReports.stream()
+                    .map(r -> toReportResponse(r, r.getPost().getPostStatus()))
+                    .forEach(result::add);
+        }
+
+        return result;
     }
 
     /**

@@ -66,6 +66,9 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.DELETE, "/users/{userId}")
                                                 .hasRole(UserEnum.ADMIN.name())
 
+                                                // Inspection Reports - Public GET (PASS visible to all, FAIL only to seller)
+                                                .requestMatchers(HttpMethod.GET, "/reports/inspection").permitAll()
+
                                                 // Inspector only endpoints
                                                 .requestMatchers("/inspection/**")
                                                 .hasRole(UserEnum.INSPECTOR.name())
