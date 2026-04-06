@@ -86,7 +86,10 @@ public enum ErrorCode {
     WITHDRAW_INVALID_STATUS(1087, "Withdrawal is not in PENDING status", HttpStatus.BAD_REQUEST),
     WITHDRAW_MIN_AMOUNT(1088, "Minimum withdrawal amount is 50,000 VND", HttpStatus.BAD_REQUEST),
     INVALID_INSPECTION_SCORE(1089, "Inspection score must be 0, 3, 7, or 10", HttpStatus.BAD_REQUEST),
-    ;
+    DESCRIPTION_CONTAINS_CONTACT_INFO(1090,
+            "Description must not contain contact information (phone number, email, or social media links)",
+            HttpStatus.BAD_REQUEST),
+            ;
 
     ErrorCode(int code, String message, HttpStatus statusCode) {
         this.code = code;

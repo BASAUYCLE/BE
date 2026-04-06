@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,18 +36,35 @@ public class BicyclePostService {
     private final TransactionService transactionService;
     private final SystemConfigService systemConfigService;
 
-    // Statuses visible to public users (
+    // Statuses visible to public users
     private static final List<String> PUBLIC_STATUSES = Arrays.asList(
             PostStatus.AVAILABLE.name(),
             PostStatus.PROCESSING.name(),
             PostStatus.DEPOSITED.name(),
             PostStatus.SOLD.name());
 
+    // ============ CONTACT INFO DETECTION PATTERNS ============
+
+    // Vietnamese phone numbers: 09x, 03x, 07x, 08x, 05x, +84...
+    private static final Pattern PHONE_PATTERN = Pattern.compile(
+            "(\\+?84|0)\\s*[.\\-]?\\s*\\d[\\s.\\-]?\\d[\\s.\\-]?\\d[\\s.\\-]?\\d[\\s.\\-]?\\d[\\s.\\-]?\\d[\\s.\\-]?\\d[\\s.\\-]?\\d[\\s.\\-]?\\d?");
+
+    // Email addresses
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(
+            "[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}");
+
+    // Social media / messaging apps
+    private static final Pattern SOCIAL_PATTERN = Pattern.compile(
+            "(?i)(zalo|facebook|fb\\.com|m\\.me|t\\.me|wa\\.me|viber|telegram|whatsapp|messenger)");
+
     public BicyclePostResponse createPost(BicyclePostCreateRequest request) {
         log.info("Creating bicycle post: {}", request.getBicycleName());
 
         // Validate required fields
         validateRequiredFields(request);
+
+        // Check for contact info in description
+        validateNoContactInfo(request.getBicycleDescription());
 
         // Get related entities
         User seller = userRepository.findById(request.getSellerId())
@@ -248,7 +266,9 @@ public class BicyclePostService {
                 .bicycleColor(request.getBicycleColor() != null ? request.getBicycleColor().trim() : null)
                 .price(request.getPrice())
                 .bicycleDescription(
-                        request.getBicycleDescription() != null ? request.getBicycleDescription().trim() : null)
+                        request.getBicycleDescription() != null
+                                ? validateAndTrimDescription(request.getBicycleDescription())
+                                : null)
                 .groupset(request.getGroupset() != null ? request.getGroupset().trim() : null)
                 .frameMaterial(request.getFrameMaterial() != null ? request.getFrameMaterial().trim() : null)
                 .brakeType(request.getBrakeType() != null ? request.getBrakeType().trim() : null)
@@ -292,6 +312,9 @@ public class BicyclePostService {
 
         // Validate all fields are complete before submitting
         validateDraftComplete(post);
+
+        // Check for contact info in description before submitting
+        validateNoContactInfo(post.getBicycleDescription());
 
         // Deduct posting fee
         deductPostingFee(post.getSeller());
@@ -375,6 +398,33 @@ public class BicyclePostService {
         }
     }
 
+    /**
+     * Validate that text does not contain contact information.
+     * Detects: phone numbers (VN), emails, social media links.
+     */
+    private void validateNoContactInfo(String text) {
+        if (text == null || text.isEmpty())
+            return;
+
+        if (PHONE_PATTERN.matcher(text).find()) {
+            log.warn("Contact info detected in description: phone number");
+            throw new AppException(ErrorCode.DESCRIPTION_CONTAINS_CONTACT_INFO);
+        }
+        if (EMAIL_PATTERN.matcher(text).find()) {
+            log.warn("Contact info detected in description: email");
+            throw new AppException(ErrorCode.DESCRIPTION_CONTAINS_CONTACT_INFO);
+        }
+        if (SOCIAL_PATTERN.matcher(text).find()) {
+            log.warn("Contact info detected in description: social media");
+            throw new AppException(ErrorCode.DESCRIPTION_CONTAINS_CONTACT_INFO);
+        }
+    }
+
+    private String validateAndTrimDescription(String description) {
+        validateNoContactInfo(description);
+        return description.trim();
+    }
+
     private void updateAllFields(BicyclePost post, BicyclePostUpdateRequest request) {
         if (request.getBrandId() != null) {
             Brand brand = brandRepository.findById(request.getBrandId())
@@ -417,6 +467,7 @@ public class BicyclePostService {
             post.setSize(request.getSize());
         }
         if (request.getBicycleDescription() != null) {
+            validateNoContactInfo(request.getBicycleDescription());
             post.setBicycleDescription(request.getBicycleDescription().trim());
         }
     }
