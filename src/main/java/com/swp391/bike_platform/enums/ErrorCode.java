@@ -89,6 +89,9 @@ public enum ErrorCode {
     DESCRIPTION_CONTAINS_CONTACT_INFO(1090,
             "Description must not contain contact information (phone number, email, or social media links)",
             HttpStatus.BAD_REQUEST),
+    DAILY_POST_LIMIT_EXCEEDED(1091,
+            "You have reached the daily post limit (10 posts per day)",
+            HttpStatus.TOO_MANY_REQUESTS),
             ;
 
     ErrorCode(int code, String message, HttpStatus statusCode) {
