@@ -18,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -35,6 +37,8 @@ public class BicyclePostService {
     private final WalletService walletService;
     private final TransactionService transactionService;
     private final SystemConfigService systemConfigService;
+
+    private static final int MAX_POSTS_PER_DAY = 10;
 
     // Statuses visible to public users
     private static final List<String> PUBLIC_STATUSES = Arrays.asList(
@@ -65,6 +69,9 @@ public class BicyclePostService {
 
         // Check for contact info in description
         validateNoContactInfo(request.getBicycleDescription());
+
+        // Check daily post limit
+        validateDailyPostLimit(request.getSellerId());
 
         // Get related entities
         User seller = userRepository.findById(request.getSellerId())
@@ -316,6 +323,9 @@ public class BicyclePostService {
         // Check for contact info in description before submitting
         validateNoContactInfo(post.getBicycleDescription());
 
+        // Check daily post limit
+        validateDailyPostLimit(userId);
+
         // Deduct posting fee
         deductPostingFee(post.getSeller());
 
@@ -360,6 +370,23 @@ public class BicyclePostService {
     }
 
     // Helper methods
+
+    /**
+     * Validate that the seller has not exceeded the daily post limit.
+     * Only counts non-DRAFTED posts created today.
+     */
+    private void validateDailyPostLimit(Long sellerId) {
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1);
+
+        long todayPostCount = bicyclePostRepository
+                .countBySeller_UserIdAndPostStatusNotAndCreatedAtBetween(
+                        sellerId, "DRAFTED", startOfDay, endOfDay);
+
+        if (todayPostCount >= MAX_POSTS_PER_DAY) {
+            throw new AppException(ErrorCode.DAILY_POST_LIMIT_EXCEEDED);
+        }
+    }
 
     /**
      * Deduct posting fee from seller wallet and create POSTING_FEE transaction
