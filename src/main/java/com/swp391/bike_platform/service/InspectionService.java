@@ -78,15 +78,17 @@ public class InspectionService {
         double conditionPercent = calculateConditionPercent(request);
 
         // Xe cũ không thể đạt 100% — tự động trừ xuống 99%
-        if (conditionPercent >= 100.0) {
+        if (conditionPercent >= 100.0)
             conditionPercent = 99.0;
-        }
 
-        // Gán nhãn overallCondition
+        // Cap conditionPercent theo điểm thấp nhất → % luôn khớp label trên UI
+        conditionPercent = applyMinScoreCeiling(conditionPercent, request);
+
+        // Gán nhãn overallCondition (từ % đã cap)
         String overallCondition = determineOverallCondition(conditionPercent);
 
         // Xác định PASS/FAIL
-        InspectionResult result = determineResult(conditionPercent, request.getFrameScore(), request.getBrakeScore());
+        InspectionResult result = determineResult(conditionPercent, request);
 
         // Update post status
         String newPostStatus = (result == InspectionResult.PASS) ? PostStatus.AVAILABLE.name()
@@ -169,7 +171,28 @@ public class InspectionService {
     }
 
     /**
+     * Cap conditionPercent theo điểm thấp nhất của 6 tiêu chí.
+     * Đảm bảo % hiển thị trên UI luôn khớp với label xếp loại.
+     * - minScore ≤ 3: max 69% (FAIR)
+     * - minScore = 7: max 89% (GOOD)
+     * - minScore = 10: không cap (EXCELLENT nếu ≥90%)
+     */
+    private double applyMinScoreCeiling(double conditionPercent, InspectionRequest request) {
+        int minScore = java.util.stream.Stream.of(
+                request.getColorScore(), request.getFrameScore(), request.getGroupsetScore(),
+                request.getBrakeScore(), request.getControlScore(), request.getWheelScore()).min(Integer::compare)
+                .orElse(0);
+
+        if (minScore <= 3)
+            return Math.min(conditionPercent, 69.0);
+        if (minScore == 7)
+            return Math.min(conditionPercent, 89.0);
+        return conditionPercent; // minScore == 10, không cap
+    }
+
+    /**
      * Gán nhãn tình trạng xe dựa trên conditionPercent.
+     * conditionPercent đã được cap bởi applyMinScoreCeiling → label luôn khớp %.
      */
     private String determineOverallCondition(double conditionPercent) {
         if (conditionPercent >= 90)
@@ -182,14 +205,38 @@ public class InspectionService {
     }
 
     /**
-     * Xác định kết quả kiểm định.
-     * Auto FAIL nếu: conditionPercent < 50 HOẶC frameScore == 0 HOẶC brakeScore ==
-     * 0
+     * Xác định kết quả kiểm định PASS/FAIL.
+     * FAIL nếu:
+     * 1. Bất kỳ bộ phận cơ khí nào (frame/groupset/brake/control/wheel) score 0
+     * 2. Franken-bike: frame VÀ groupset đều ≤ 3 (xương sống xe bị chắp vá)
+     * 3. ≥3 bộ phận (kể cả color) score 3 (xe chắp vá quá nhiều)
+     * 4. conditionPercent < 50
      */
-    private InspectionResult determineResult(double conditionPercent, int frameScore, int brakeScore) {
-        if (conditionPercent < 50 || frameScore == 0 || brakeScore == 0) {
+    private InspectionResult determineResult(double conditionPercent, InspectionRequest request) {
+        // 1. Auto-fail: bộ phận cơ khí score 0
+        if (request.getFrameScore() == 0 ||
+                request.getGroupsetScore() == 0 ||
+                request.getBrakeScore() == 0 ||
+                request.getControlScore() == 0 ||
+                request.getWheelScore() == 0) {
             return InspectionResult.FAIL;
         }
+
+        // 2. Franken-bike: khung + truyền động đều chắp vá
+        if (request.getFrameScore() <= 3 && request.getGroupsetScore() <= 3) {
+            return InspectionResult.FAIL;
+        }
+
+        // 3. Quá nhiều bộ phận chắp vá (≥3 threes)
+        long countOfThrees = java.util.stream.Stream.of(
+                request.getColorScore(), request.getFrameScore(), request.getGroupsetScore(),
+                request.getBrakeScore(), request.getControlScore(), request.getWheelScore()).filter(score -> score == 3)
+                .count();
+
+        if (countOfThrees >= 3 || conditionPercent < 50) {
+            return InspectionResult.FAIL;
+        }
+
         return InspectionResult.PASS;
     }
 
