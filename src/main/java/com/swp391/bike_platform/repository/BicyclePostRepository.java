@@ -5,10 +5,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
 public interface BicyclePostRepository extends JpaRepository<BicyclePost, Long> {
+
+        // Count posts created by seller in a time range, excluding a specific status (e.g. DRAFTED)
+        long countBySeller_UserIdAndPostStatusNotAndCreatedAtBetween(
+                        Long sellerId, String postStatus, LocalDateTime start, LocalDateTime end);
 
         List<BicyclePost> findBySeller_UserId(Long sellerId);
 
