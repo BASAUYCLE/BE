@@ -4,6 +4,10 @@
     context-path: /
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
   datasource:
     url: jdbc:sqlserver://localhost:1433;databaseName=BikeShopDB;encrypt=true;trustServerCertificate=true
     username: sa
@@ -66,3 +70,4 @@ logging:
     com.swp391.bike_platform: INFO
     org.springframework: WARN
     org.hibernate: WARN
+
