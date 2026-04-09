@@ -34,6 +34,13 @@ public class DisputeScheduler {
         }
 
         try {
+            // 2.5 DEPOSITED/PAID -> CANCELLED after auto cancel days
+            orderService.autoCancelUnconfirmedOrders();
+        } catch (Exception e) {
+            log.error("Failed to auto cancel unshipped orders: {}", e.getMessage(), e);
+        }
+
+        try {
             // 3. APPROVED -> REJECTED (Buyer didn't ship return item)
             disputeService.autoCloseUnshippedDisputes();
         } catch (Exception e) {

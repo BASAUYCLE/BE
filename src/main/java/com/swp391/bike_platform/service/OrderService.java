@@ -376,6 +376,40 @@ public class OrderService {
         }
     }
 
+    @Transactional
+    public void autoCancelUnconfirmedOrders() {
+        int autoCancelDays = systemConfigService.getAutoCancelUnshippedOrderDays();
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(autoCancelDays);
+
+        List<String> statuses = Arrays.asList(OrderStatus.DEPOSITED.name(), OrderStatus.PAID.name());
+        List<Order> unshippedOrders = orderRepository.findUnshippedOrdersBefore(statuses, cutoff);
+
+        for (Order order : unshippedOrders) {
+            BigDecimal refundAmount = order.getDepositAmount(); // The application holds this amount exactly
+            Long buyerId = order.getBuyer().getUserId();
+            Wallet buyerWallet = walletService.getOrCreateWallet(buyerId);
+
+            walletService.addBalance(buyerWallet.getWalletId(), refundAmount);
+
+            transactionService.createOrderTransaction(
+                    buyerWallet, buyerWallet.getUser(), order.getPost(),
+                    TransactionType.REFUND, refundAmount,
+                    formatDescription("+", refundAmount,
+                            "Refund for Order #" + order.getOrderId() + " (Auto-cancelled due to inactive seller)"));
+
+            order.setOrderStatus(OrderStatus.CANCELLED.name());
+            orderRepository.save(order);
+
+            // Restore post to AVAILABLE
+            BicyclePost post = order.getPost();
+            post.setPostStatus(PostStatus.AVAILABLE.name());
+            bicyclePostRepository.save(post);
+
+            log.info("Order #{} auto-cancelled and refunded after {} days of no shipping confirmation",
+                    order.getOrderId(), autoCancelDays);
+        }
+    }
+
     // ─────────────────── QUERIES ───────────────────
 
     public OrderResponse getOrderById(Long orderId) {

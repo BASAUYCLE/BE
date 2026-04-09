@@ -63,6 +63,17 @@ public class SystemConfigService {
     }
 
     /**
+     * Get days for auto canceling unshipped orders (default 3)
+     */
+    public int getAutoCancelUnshippedOrderDays() {
+        try {
+            return Integer.parseInt(getConfigValue("AUTO_CANCEL_UNSHIPPED_ORDER_DAYS"));
+        } catch (AppException e) {
+            return 3;
+        }
+    }
+
+    /**
      * Get days for auto refunding shipped dispute (default 7)
      */
     public int getAutoRefundShippedDisputeDays() {
