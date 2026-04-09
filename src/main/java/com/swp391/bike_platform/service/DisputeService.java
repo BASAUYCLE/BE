@@ -114,15 +114,10 @@ public class DisputeService {
         }
         String imageUrl = cloudinaryService.uploadImage(request.getProofImage());
 
-        // Auto-assign inspector from InspectionReport
-        User postInspector = inspectionReportRepository.findByPost_PostId(order.getPost().getPostId())
-                .map(InspectionReport::getInspector)
-                .orElse(null);
-
         Dispute dispute = Dispute.builder()
                 .order(order)
                 .buyer(order.getBuyer())
-                .inspector(postInspector)
+                .inspector(null)
                 .status(DisputeStatus.OPEN.name())
                 .reason(request.getReason())
                 .proofImages(imageUrl)
@@ -156,15 +151,9 @@ public class DisputeService {
             return toResponse(dispute);
         }
 
-        // Inspector: only if they approved the post
+        // Inspector: can view any dispute
         if (UserEnum.INSPECTOR.equals(user.getRole())) {
-            Long postId = dispute.getOrder().getPost().getPostId();
-            InspectionReport report = inspectionReportRepository.findByPost_PostId(postId)
-                    .orElseThrow(() -> new AppException(ErrorCode.INSPECTION_REPORT_NOT_FOUND));
-            if (report.getInspector().getUserId().equals(userId)) {
-                return toResponse(dispute);
-            }
-            throw new AppException(ErrorCode.UNAUTHORIZED_INSPECTOR);
+            return toResponse(dispute);
         }
 
         throw new AppException(ErrorCode.UNAUTHORIZED);
@@ -187,7 +176,7 @@ public class DisputeService {
     // ─────────────────── GET /disputes/inspector/my-disputes (INSPECTOR)
     // ───────────────────
     public List<DisputeResponse> getDisputesByInspector(Long inspectorId) {
-        return disputeRepository.findByInspectorPostApprover(inspectorId).stream()
+        return disputeRepository.findAvailableOrAssignedToInspector(inspectorId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -195,7 +184,7 @@ public class DisputeService {
     // ─────────────────── GET /disputes/inspector/review-history (INSPECTOR)
     // ───────────────────
     public List<DisputeResponse> getResolvedDisputesByInspector(Long inspectorId) {
-        return disputeRepository.findResolvedByInspectorPostApprover(inspectorId).stream()
+        return disputeRepository.findResolvedByInspectorAssigned(inspectorId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -210,20 +199,13 @@ public class DisputeService {
             throw new AppException(ErrorCode.INVALID_DISPUTE_STATUS);
         }
 
-        // Verify inspector is the one who approved the post
-        Long postId = dispute.getOrder().getPost().getPostId();
-        InspectionReport report = inspectionReportRepository.findByPost_PostId(postId)
-                .orElseThrow(() -> new AppException(ErrorCode.INSPECTION_REPORT_NOT_FOUND));
-
-        if (!report.getInspector().getUserId().equals(inspectorId)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED_INSPECTOR);
-        }
-
         // Auto-assign inspector to dispute if not yet assigned
         if (dispute.getInspector() == null) {
             User inspector = userRepository.findById(inspectorId)
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
             dispute.setInspector(inspector);
+        } else if (!dispute.getInspector().getUserId().equals(inspectorId)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED_INSPECTOR);
         }
 
         dispute.setInspectorNote(request.getNote());

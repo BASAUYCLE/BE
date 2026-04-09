@@ -35,16 +35,14 @@ public interface DisputeRepository extends JpaRepository<Dispute, Long> {
         // Admin: get all disputes
         List<Dispute> findAllByOrderByCreatedAtDesc();
 
-        // Inspector: get disputes for posts they approved
-        @Query("SELECT d FROM Dispute d WHERE d.order.post.postId IN " +
-                        "(SELECT ir.post.postId FROM InspectionReport ir WHERE ir.inspector.userId = :inspectorId) " +
-                        "ORDER BY d.createdAt DESC")
-        List<Dispute> findByInspectorPostApprover(@Param("inspectorId") Long inspectorId);
+        // Inspector: get available disputes (OPEN and no inspector) or disputes
+        // assigned to this inspector
+        @Query("SELECT d FROM Dispute d WHERE d.inspector IS NULL OR d.inspector.userId = :inspectorId ORDER BY d.createdAt DESC")
+        List<Dispute> findAvailableOrAssignedToInspector(@Param("inspectorId") Long inspectorId);
 
-        // Inspector: get resolved/rejected disputes for posts they approved
-        @Query("SELECT d FROM Dispute d WHERE d.order.post.postId IN " +
-                        "(SELECT ir.post.postId FROM InspectionReport ir WHERE ir.inspector.userId = :inspectorId) " +
+        // Inspector: get resolved/rejected disputes assigned to this inspector
+        @Query("SELECT d FROM Dispute d WHERE d.inspector.userId = :inspectorId " +
                         "AND d.status IN ('RESOLVED', 'REJECTED') " +
                         "ORDER BY d.resolvedAt DESC")
-        List<Dispute> findResolvedByInspectorPostApprover(@Param("inspectorId") Long inspectorId);
+        List<Dispute> findResolvedByInspectorAssigned(@Param("inspectorId") Long inspectorId);
 }
